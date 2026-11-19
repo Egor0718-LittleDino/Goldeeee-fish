@@ -1,0 +1,1467 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>養魚目標</title>
+<meta name="theme-color" content="#8EE0CF">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="養魚目標">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<script src="config.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --wall:#8EE0CF; --desk:#8EC1F5; --desk2:#7FB2EA; --water:#8B98E4; --glass:#C9C6F2;
+  --ink:#2B3A55; --ink2:#5B6B86; --card:#FFFFFFE6; --line:#DDE5F2;
+  --pass:#3BA776; --warn:#E39B2D; --fail:#D9534F;
+  --r-common:#9AA5B5; --r-rare:#3E8EDB; --r-epic:#9B5BD6; --r-leg:#E0A51E;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%}
+body{font-family:"Noto Sans TC",system-ui,sans-serif;color:var(--ink);background:var(--wall);
+  padding:env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left)}
+#app{max-width:480px;margin:0 auto;min-height:100vh;display:flex;flex-direction:column;position:relative;
+  background:linear-gradient(var(--wall) 0 34%, var(--desk2) 34% 35.5%, var(--desk) 35.5%)}
+header{display:flex;align-items:center;gap:10px;padding:16px 18px 8px}
+header h1{font-size:22px;font-weight:900;margin:0;flex:1;letter-spacing:.5px}
+.iconbtn{border:0;background:#ffffffb0;border-radius:14px;padding:9px 13px;font:inherit;font-weight:700;color:var(--ink);cursor:pointer}
+.iconbtn.primary{background:var(--ink);color:#fff}
+main{flex:1;padding:6px 16px 96px}
+.banner{font-size:12.5px;background:#fff8;border-radius:10px;padding:7px 11px;margin:0 0 10px;color:var(--ink2)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.tankcard{background:var(--card);border-radius:20px;padding:10px 10px 12px;cursor:pointer;box-shadow:0 2px 0 #0000000d;text-align:center;position:relative}
+.tankcard .name{font-weight:700;font-size:14.5px;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tankcard .meta{font-size:12px;color:var(--ink2);margin-top:2px}
+.dots{display:flex;gap:3px;justify-content:center;margin-top:6px;flex-wrap:wrap}
+.dots i{width:7px;height:7px;border-radius:50%;background:#D5DCEA}
+.dots i.p{background:var(--pass)} .dots i.m{background:#E7A6A4}
+.hungry{position:absolute;top:8px;right:8px;background:#FFE7C2;color:#9A5B00;font-size:11px;font-weight:700;padding:2px 7px;border-radius:9px}
+.rar{display:inline-block;font-size:11px;font-weight:700;color:#fff;padding:2px 8px;border-radius:9px;vertical-align:middle}
+.rar.common{background:var(--r-common)} .rar.rare{background:var(--r-rare)} .rar.epic{background:var(--r-epic)} .rar.legendary{background:var(--r-leg)}
+.empty{background:var(--card);border-radius:22px;padding:22px;text-align:center}
+.empty p{color:var(--ink2);font-size:14px}
+.btn{display:block;width:100%;border:0;border-radius:16px;padding:14px;font:inherit;font-weight:700;font-size:16px;cursor:pointer;background:var(--ink);color:#fff;margin-top:10px}
+.btn.ghost{background:#fff;color:var(--ink);border:1.5px solid var(--line)}
+.btn.orange{background:#F29A3B}
+.btn:disabled{opacity:.45;cursor:default}
+nav.tabs{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;display:flex;background:#fff;border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom);z-index:5}
+nav.tabs button{flex:1;border:0;background:none;font:inherit;font-size:13px;padding:10px 0 12px;color:var(--ink2);cursor:pointer}
+nav.tabs button b{display:block;font-size:20px;line-height:1.1}
+nav.tabs button.on{color:var(--ink);font-weight:700}
+.panel{background:var(--card);border-radius:20px;padding:16px;margin-top:12px}
+.panel h3{margin:0 0 8px;font-size:15px}
+label.f{display:block;font-size:13px;font-weight:700;margin:12px 0 5px}
+input[type=text],input[type=email],input[type=password],input[type=date],input[type=time],textarea,select{width:100%;font:inherit;font-size:15px;padding:11px 12px;border:1.5px solid var(--line);border-radius:12px;background:#fff;color:var(--ink)}
+textarea{min-height:84px;resize:vertical}
+.seg{display:flex;gap:8px;flex-wrap:wrap}
+.seg button{flex:1;min-width:64px;border:1.5px solid var(--line);background:#fff;border-radius:14px;padding:11px 6px;font:inherit;cursor:pointer;color:var(--ink)}
+.seg button.on{border-color:var(--ink);background:var(--ink);color:#fff;font-weight:700}
+.seg button small{display:block;font-size:11px;opacity:.75;margin-top:2px}
+.days{display:flex;gap:6px}
+.days button{flex:1;aspect-ratio:1;border-radius:50%;border:1.5px solid var(--line);background:#fff;font:inherit;cursor:pointer;color:var(--ink)}
+.days button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.steps{display:flex;gap:6px;margin:4px 0 2px}
+.steps i{flex:1;height:5px;border-radius:3px;background:#ffffff90}
+.steps i.on{background:var(--ink)}
+.species{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sp{border:2px solid transparent;background:#fff;border-radius:16px;padding:8px;text-align:center;cursor:pointer;position:relative}
+.sp.on{outline:3px solid var(--ink);outline-offset:2px}
+/* 卡片底色依稀有度：普通淺灰、稀有淺藍、史詩淺紫、傳說流動的淡彩虹 */
+.sp.r-common{background:#F3F5F8}
+.sp.r-rare{background:#DDEBFB}
+.sp.r-epic{background:#ECE0FA}
+.sp.r-legendary{background:linear-gradient(120deg,#FFE0E0,#FFEBCF,#FFF6C9,#DDF7E4,#D9F0FF,#EADFFF,#FFE0E0,#FFEBCF,#FFF6C9,#DDF7E4,#D9F0FF,#EADFFF,#FFE0E0);background-size:200% 200%;animation:rainbowBg 6s linear infinite}
+@keyframes rainbowBg{from{background-position:0% 50%}to{background-position:100% 50%}}
+/* 圖鑑頁統一背景 */
+#app.v-dex{background:var(--wall)}
+@media (prefers-reduced-motion:reduce){.sp.r-legendary{animation:none}}
+.sp.locked{cursor:default;opacity:.55}
+.sp .n{font-weight:700;font-size:14px}
+.sp .d{font-size:11.5px;color:var(--ink2);margin-top:2px;line-height:1.35}
+.hint{font-size:12.5px;color:var(--ink2);margin-top:6px;line-height:1.5}
+.toggle{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink2);margin:10px 0 4px}
+.big{display:flex;justify-content:center;margin-top:2px}
+.bar{height:10px;border-radius:6px;background:#E3E9F4;overflow:hidden}
+.bar>span{display:block;height:100%;border-radius:6px}
+.statrow{display:flex;align-items:center;gap:10px;font-size:13px;margin:7px 0}
+.statrow .k{width:44px;color:var(--ink2)} .statrow .bar{flex:1}
+.statrow .v{width:74px;text-align:right;font-weight:700;font-size:12.5px}
+.hist{list-style:none;padding:0;margin:0}
+.hist li{display:flex;gap:10px;padding:10px 0;border-top:1px solid var(--line);font-size:13.5px}
+.hist li:first-child{border-top:0}
+.hist .st{flex:none;width:26px;text-align:center;font-size:17px}
+.hist .tx{flex:1;min-width:0}
+.hist .tx .when{font-size:12px;color:var(--ink2)}
+.hist .tx .rs{color:var(--ink2);font-size:12.5px;margin-top:2px}
+.thumbs{display:flex;gap:6px;margin-top:6px;flex-wrap:wrap}
+.thumbs img{width:64px;height:64px;object-fit:cover;border-radius:10px;border:1px solid var(--line)}
+.drop{border:2px dashed #B9C6DD;border-radius:16px;padding:16px;text-align:center;color:var(--ink2);font-size:14px;cursor:pointer;background:#fff;display:block}
+.drop input{display:none}
+.result{text-align:center;padding-top:6px}
+.result h2{margin:6px 0 4px;font-size:22px}
+.result .reason{background:#fff;border-radius:14px;padding:12px 14px;font-size:14.5px;line-height:1.6;text-align:left;margin-top:10px}
+.tag{font-size:12px;color:var(--ink2);margin-top:8px}
+.memgrid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.memgrid .tankcard{padding:6px 6px 10px}
+.memgrid .name{font-size:13px}
+.recap{white-space:pre-wrap;line-height:1.7;font-size:14.5px}
+.devtools{margin-top:22px;font-size:12px;color:var(--ink2);text-align:center}
+.devtools button{border:1px solid #ffffffb0;background:#ffffff70;border-radius:10px;padding:6px 10px;font:inherit;font-size:12px;color:var(--ink);margin:3px;cursor:pointer}
+.modal{position:fixed;inset:0;background:#2B3A5566;display:flex;align-items:flex-end;justify-content:center;z-index:20}
+.modal .sheet{background:#fff;width:100%;max-width:480px;border-radius:22px 22px 0 0;padding:18px 18px calc(18px + env(safe-area-inset-bottom))}
+.dexsheet{max-height:92vh;overflow:auto;animation:sheetUp .28s cubic-bezier(.2,.9,.3,1.1)}
+.dexsheet.r-common{background:#F3F5F8}.dexsheet.r-rare{background:#E6F0FC}.dexsheet.r-epic{background:#F1E8FB}
+.dexsheet.r-legendary{background:linear-gradient(160deg,#FFF0F0,#FFF8E6,#EEFAF1,#EAF5FF,#F3EDFF)}
+@keyframes sheetUp{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
+.evo{display:flex;align-items:center;justify-content:center;gap:2px;margin-top:6px}
+.evo-i{flex:1;max-width:100px;border:2px solid transparent;background:#ffffffa0;border-radius:14px;padding:2px 2px 5px;display:flex;flex-direction:column;align-items:center;font:inherit;font-size:11.5px;color:var(--ink);cursor:pointer}
+.evo-i svg{width:100%;height:auto}
+.evo-i.on{border-color:var(--ink);background:#fff}
+.evo .arr{color:var(--ink2);font-size:16px}
+.dexdesc{font-size:15px;line-height:1.75;margin:12px 0 8px}
+.quote{font-size:14px;color:var(--ink2);background:#ffffffb0;border-radius:12px;padding:8px 12px;margin-bottom:10px}
+.dexstats{display:flex;gap:8px;margin-bottom:6px}
+.dexstats div{flex:1;background:#ffffffb0;border-radius:12px;padding:8px 4px;text-align:center}
+.dexstats b{display:block;font-size:18px}.dexstats span{font-size:11.5px;color:var(--ink2)}
+.err{color:var(--fail);font-size:13px;margin-top:8px}
+/* animation */
+.swim{animation:swim 6s ease-in-out infinite}
+@keyframes swim{0%,100%{transform:translate(-14px,0)}50%{transform:translate(14px,-5px)}}
+.bob{animation:bob 2.6s ease-in-out infinite}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+.pellet{animation:drop 1.6s ease-in forwards}
+@keyframes drop{from{transform:translateY(-80px);opacity:0}20%{opacity:1}to{transform:translateY(0);opacity:0}}
+.sniff{animation:sniff 1s ease-in-out infinite}
+@keyframes sniff{0%,100%{transform:translateX(0)}50%{transform:translateX(8px)}}
+.grow{animation:grow .9s cubic-bezier(.3,1.6,.5,1) both}
+@keyframes grow{from{transform:scale(.8)}to{transform:scale(1)}}
+.tail{transform-box:fill-box;transform-origin:100% 50%;animation:wag var(--wag,.9s) ease-in-out infinite alternate}
+.mover .tail{animation:none;will-change:transform}
+.mover{will-change:transform}
+@keyframes wag{from{transform:rotate(-11deg)}to{transform:rotate(11deg)}}
+.eyes{transform-box:fill-box;transform-origin:50% 50%;animation:blink 4.6s infinite}
+@keyframes blink{0%,91%,100%{transform:scaleY(1)}94%{transform:scaleY(.08)}}
+.wings{transform-box:fill-box;transform-origin:50% 50%;animation:flap 1.8s ease-in-out infinite}
+@keyframes flap{0%,100%{transform:scaleY(1)}50%{transform:scaleY(.7)}}
+.lure{animation:glow 1.6s ease-in-out infinite}
+@keyframes glow{50%{opacity:.45}}
+.sway{transform-box:fill-box;transform-origin:50% 100%;animation:sway 3.4s ease-in-out infinite alternate}
+@keyframes sway{from{transform:rotate(-7deg)}to{transform:rotate(7deg)}}
+.fx-rise{animation:fxrise var(--t,2.4s) ease-out forwards}
+@keyframes fxrise{from{transform:translate(0,0) scale(var(--s0,1));opacity:var(--o,.95)}to{transform:translate(var(--dx,0px),var(--dy,-80px)) scale(var(--s1,1));opacity:0}}
+svg[data-play]{cursor:pointer;touch-action:manipulation}
+.aura .ray,.aura .halo{animation:rainbow 3s linear infinite}
+.aura .rays{transform-box:fill-box;transform-origin:50% 50%;animation:spin 14s linear infinite}
+.aura .outline *{stroke-linejoin:round;stroke-linecap:round;opacity:1!important}
+.aura .glow *{stroke-width:15px!important}
+.aura .glow{opacity:.8;animation:auraPulse 2.4s ease-in-out infinite}
+.aura .rim *{stroke-width:8px!important}
+/* 各稀有度色環：普通灰、稀有藍、史詩紫、傳說彩虹 */
+.aura-legendary .outline *{fill:url(#rainbowGrad)!important;stroke:url(#rainbowGrad)!important}
+.aura-epic .outline *{fill:#A86BE8!important;stroke:#A86BE8!important}
+.aura-rare .outline *{fill:#4A9BEA!important;stroke:#4A9BEA!important}
+.aura-common .outline *{fill:#F4F7FB!important;stroke:#F4F7FB!important}
+.aura-common .glow *{stroke-width:11px!important}
+.aura-common .rim *{stroke-width:6.5px!important}
+.aura-common .glow{opacity:.6}
+.aura .pulse{animation:auraPulse 2.4s ease-in-out infinite}
+@keyframes rainbow{0%{stroke:#FF6B6B}16%{stroke:#FFB84D}33%{stroke:#FFE66D}50%{stroke:#6BE58C}66%{stroke:#5FC8FF}83%{stroke:#B48CFF}100%{stroke:#FF6B6B}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes auraPulse{0%,100%{opacity:.55}50%{opacity:.95}}
+@media (prefers-reduced-motion:reduce){.swim,.bob,.pellet,.sniff,.grow,.tail,.eyes,.wings,.lure,.sway,.fx-rise,.aura .ray,.aura .halo,.aura .rays,.aura .pulse{animation:none}}
+</style>
+</head>
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><filter id="aurablur" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="4"/></filter>
+<linearGradient id="rainbowGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FF6B6B"/><stop offset=".2" stop-color="#FFB84D"/><stop offset=".4" stop-color="#FFE66D"/><stop offset=".6" stop-color="#6BE58C"/><stop offset=".8" stop-color="#5FC8FF"/><stop offset="1" stop-color="#B48CFF"/>
+<animateTransform attributeName="gradientTransform" type="rotate" from="0 .5 .5" to="360 .5 .5" dur="3.5s" repeatCount="indefinite"/></linearGradient></defs></svg>
+<div id="app"></div>
+<script>
+// ---------- 基本資料 ----------
+const RARITY = {
+  common:{label:'普通',order:0,penalty:0,minScore:60},
+  rare:{label:'稀有',order:1,penalty:1,minScore:65},
+  epic:{label:'史詩',order:2,penalty:1,minScore:72},
+  legendary:{label:'傳說',order:3,penalty:2,minScore:80}
+};
+const SPECIES = [
+  {id:'goldfish',name:'金魚',rarity:'common',color:'#F5A04A',color2:'#F7C27E',line:'吃飽了，再游一圈。'},
+  {id:'guppy',name:'孔雀魚',rarity:'common',color:'#78B9E6',color2:'#F07FA8',line:'尾巴都亮起來了！'},
+  {id:'zebra',name:'斑馬魚',rarity:'common',color:'#E3ECF6',color2:'#4A79C4',line:'條紋又整齊了一點。'},
+  {id:'neon',name:'霓虹燈魚',rarity:'common',color:'#B9C7D8',color2:'#35C4F0',color3:'#E84B5A',line:'今天的我，特別亮。'},
+  {id:'whitecloud',name:'白雲山魚',rarity:'common',color:'#C9D8C4',color2:'#E86A5F',color3:'#F2DE6B',line:'小小的，也很努力。',f:{sx:1.15,sy:.75,tail:'fork',tc:'c2',dc:'c2',pattern:['hband']}},
+  {id:'swordtail',name:'紅劍魚',rarity:'common',color:'#EC5B44',color2:'#F7A47C',color3:'#3A4560',line:'劍指下一個目標！',f:{tail:'sword',dorsal:'small',pattern:['belly']}},
+  {id:'pearlgourami',name:'珍珠馬甲',rarity:'common',color:'#CDBBA6',color2:'#F2B36A',color3:'#E9A15A',line:'今天也閃閃發亮。',f:{sy:.92,tail:'round',pattern:['pearls','belly']}},
+  {id:'balloonmolly',name:'球型茉莉',rarity:'common',color:'#F4B23E',color2:'#FFD98A',line:'吃飽飽，圓滾滾。',f:{sx:.85,sy:1.15,tail:'round',dorsal:'tall',pattern:['belly']}},
+  {id:'rummynose',name:'紅鼻剪刀',rarity:'common',color:'#DCE4EC',color2:'#FFFFFF',color3:'#E8505A',line:'鼻子紅紅，心情好好。',f:{sx:1.15,sy:.75,tail:'fork',dc:'c1',pattern:['nose']}},
+  {id:'platy',name:'月光魚',rarity:'common',color:'#F5A54A',color2:'#FFD08A',line:'安安靜靜，也在發光。',f:{tail:'round',pattern:['belly']}},
+  {id:'tigerbarb',name:'虎皮魚',rarity:'common',color:'#F2C14E',color2:'#3A3F55',color3:'#E8553F',line:'老虎也要按時吃飯。',f:{sy:.95,tail:'fork',tc:'c3',dc:'c3',pattern:['bands']}},
+  {id:'cherrybarb',name:'櫻桃燈',rarity:'common',color:'#E8605F',color2:'#F7A3A0',line:'紅紅的，像一顆櫻桃。',f:{sx:1.05,sy:.85,pattern:['belly']}},
+  {id:'harlequin',name:'三角燈',rarity:'common',color:'#F2A07B',color2:'#3A3F55',line:'三角形的決心。',f:{sy:.9,pattern:['rear']}},
+  {id:'glowlight',name:'螢光燈魚',rarity:'common',color:'#E6D9C8',color2:'#F2E9DC',color3:'#F28C5A',line:'一條小小的光帶。',f:{sx:1.12,sy:.75,pattern:['hband']}},
+  {id:'cardinal',name:'紅蓮燈',rarity:'common',color:'#C9D2DC',color2:'#E5484D',color3:'#3FB6E8',line:'紅藍配色，今天也很帥。',f:{sx:1.12,sy:.78,pattern:['belly','hband']}},
+  {id:'blackskirt',name:'黑裙魚',rarity:'common',color:'#5B6170',color2:'#8E95A3',line:'穿上裙子去冒險。',f:{dorsal:'tall',dc:'c2',pattern:['bands']}},
+  {id:'penguin',name:'企鵝燈',rarity:'common',color:'#E8ECEF',color2:'#F5F7F9',color3:'#3A3F55',line:'搖搖擺擺往前游。',f:{sx:1.12,sy:.78,dc:'c3',pattern:['hband']}},
+  {id:'bloodparrot',name:'血鸚鵡',rarity:'common',color:'#F06A4C',color2:'#FF9A7A',color3:'#F7B08A',line:'圓嘟嘟的好心情。',f:{sx:.9,sy:1.15,tail:'round',head:'beak',pattern:['belly']}},
+  {id:'pearldanio',name:'珍珠斑馬',rarity:'common',color:'#BFC9D6',color2:'#FFFFFF',line:'一顆一顆累積起來。',f:{sx:1.1,sy:.78,pattern:['pearls']}},
+  {id:'blueeye',name:'藍眼燈',rarity:'common',color:'#E9E6DA',color2:'#7FBFF5',line:'眼睛亮亮地看著目標。',f:{sx:1.08,sy:.8,pattern:['front']}},
+  {id:'endler',name:'安德拉斯',rarity:'common',color:'#7ED0B0',color2:'#F58A3A',color3:'#3A3F55',line:'小小一隻，顏色很多。',f:{tail:'lyre',tc:'c2',dc:'c2',pattern:['patches']}},
+  {id:'medaka',name:'青鱂魚',rarity:'common',color:'#E7D9B0',color2:'#F4EAD0',line:'田裡長大的努力家。',f:{sx:1.1,sy:.75,tail:'round',pattern:['belly']}},
+  {id:'paradise',name:'蓋斑鬥魚',rarity:'common',color:'#4F7BC0',color2:'#E8553F',line:'台灣原生的小勇士。',f:{tail:'lyre',tc:'c2',dorsal:'tall',dc:'c2',pattern:['bands']}},
+  {id:'hatchet',name:'銀斧魚',rarity:'common',color:'#D5DCE5',color2:'#FFFFFF',line:'挺起胸膛前進。',f:{sx:.85,sy:1.1,pattern:['belly']}},
+  {id:'otocinclus',name:'小精靈',rarity:'common',color:'#C9B28E',color2:'#E4D5BA',color3:'#5A4A3A',line:'默默把缸子擦乾淨。',f:{sx:1.1,sy:.8,tail:'round',pattern:['hband']}},
+  {id:'blackmolly',name:'黑茉莉',rarity:'common',color:'#3E4352',color2:'#6A7182',line:'低調但不放棄。',f:{tail:'round',dorsal:'tall',pattern:['belly']}},
+  {id:'kuhli',name:'蛇仔魚',rarity:'common',color:'#F2B36A',color2:'#5A4637',line:'鑽來鑽去，總會找到路。',f:{sx:1.5,sy:.45,tail:'tiny',dorsal:'none',pattern:['bands']}},
+  {id:'bristlenose',name:'大鬍子異型',rarity:'common',color:'#6E6253',color2:'#A89A86',line:'鬍子越長越有智慧。',f:{dorsal:'tall',dc:'c2',tail:'round',head:'whisker',pattern:['spots']}},
+  {id:'bumblebee',name:'熊貓鰕虎',rarity:'common',color:'#F2D04E',color2:'#3A3F55',line:'嗡嗡嗡，認真工作中。',f:{sx:1.05,sy:.85,tail:'round',pattern:['bands']}},
+  {id:'lemontetra',name:'檸檬燈',rarity:'common',color:'#F3E7A0',color2:'#F7D84E',line:'酸酸甜甜的一天。',f:{dc:'c2',pattern:['belly']}},
+  {id:'tilapia',name:'吳郭魚',rarity:'common',color:'#8E9AA6',color2:'#C9D1D8',line:'什麼環境都能撐下去。',f:{dorsal:'tall',dc:'c1',pattern:['belly']}},
+  {id:'crucian',name:'鯽魚',rarity:'common',color:'#B9A27A',color2:'#E3D5B5',line:'穩穩的，一天一點。',f:{sy:1.05,pattern:['belly']}},
+  {id:'loach',name:'泥鰍',rarity:'common',color:'#9C8A6A',color2:'#C9B994',line:'滑溜溜地鑽過難關。',f:{sx:1.5,sy:.45,tail:'round',dorsal:'none',head:'whisker',pattern:['spots']}},
+  {id:'mosquitofish',name:'大肚魚',rarity:'common',color:'#B7B9A0',color2:'#E2E3D0',line:'肚子大大，裝滿努力。',f:{tail:'round',pattern:['belly']}},
+  {id:'carp',name:'鯉魚',rarity:'common',color:'#C9A45A',color2:'#E9D39A',line:'總有一天要跳龍門。',f:{sx:1.1,head:'whisker',pattern:['belly']}},
+  {id:'ayu',name:'香魚',rarity:'common',color:'#C9CFA0',color2:'#EFF2DA',color3:'#F2DE6B',line:'清清爽爽地前進。',f:{sx:1.15,sy:.75,dc:'c3',pattern:['belly','hband']}},
+  {id:'saury',name:'秋刀魚',rarity:'common',color:'#5B7FA6',color2:'#E6ECF3',line:'細細長長，一路到底。',f:{sx:1.5,sy:.48,dc:'c1',pattern:['belly']}},
+  {id:'milkfish',name:'虱目魚',rarity:'common',color:'#B9C6D2',color2:'#EEF2F6',line:'台南的早餐冠軍。',f:{sx:1.2,sy:.75,dc:'c1',pattern:['belly']}},
+  {id:'horsemackerel',name:'竹筴魚',rarity:'common',color:'#7E97AE',color2:'#E3EAF0',color3:'#C9D6E2',line:'成群結隊一起游。',f:{sx:1.15,sy:.78,dc:'c1',pattern:['belly','hband']}},
+  {id:'mackerel',name:'鯖魚',rarity:'common',color:'#4E7FA0',color2:'#E6ECF3',color3:'#2F5570',line:'油亮亮的好狀態。',f:{sx:1.2,sy:.75,dc:'c1',pattern:['belly','back']}},
+  {id:'sardine',name:'沙丁魚',rarity:'common',color:'#6E92B8',color2:'#EDF2F7',color3:'#3E5C8C',line:'擠一擠也能前進。',f:{sx:1.15,sy:.72,dc:'c1',pattern:['belly','dots3']}},
+  {id:'blackneon',name:'黑燈',rarity:'common',color:'#C9C2B0',color2:'#F2E9C9',color3:'#3A3F55',line:'低調地發光。',f:{sx:1.1,sy:.78,pattern:['hband']}},
+  {id:'rosytetra',name:'玫瑰扯旗',rarity:'common',color:'#F2B8B0',color2:'#FFD9D3',color3:'#3A3F55',line:'把旗子插上終點。',f:{dorsal:'tall',dc:'c3',pattern:['belly']}},
+  {id:'balashark',name:'銀鯊',rarity:'common',color:'#D5DCE5',color2:'#FFFFFF',color3:'#3A3F55',line:'長得像鯊魚，其實很溫柔。',f:{sx:1.15,sy:.75,dorsal:'tall',dc:'c3',pattern:['belly']}},
+  {id:'goldtetra',name:'金燈',rarity:'common',color:'#F2CF6B',color2:'#FFE7A8',line:'亮晶晶的小進步。',f:{pattern:['belly']}},
+  {id:'algaeeater',name:'青苔鼠',rarity:'common',color:'#C9B48A',color2:'#E7DCC2',color3:'#5A4A3A',line:'默默打掃，默默變強。',f:{sx:1.2,sy:.7,tail:'fork',pattern:['hband']}},
+  {id:'krib',name:'紅肚鳳凰',rarity:'common',color:'#E9DCC4',color2:'#F28C9A',color3:'#F2C14E',line:'肚子紅紅的好氣色。',f:{dorsal:'tall',dc:'c3',pattern:['belly']}},
+  {id:'goby',name:'鰕虎魚',rarity:'common',color:'#C8B79A',color2:'#8E7A5E',line:'趴在石頭上也在努力。',f:{sx:1.1,sy:.75,tail:'round',dorsal:'tall',dc:'c1',pattern:['spots']}},
+  {id:'seabass',name:'鱸魚',rarity:'common',color:'#7F8E9E',color2:'#DDE3EA',line:'一口一口吃下目標。',f:{dorsal:'tall',dc:'c1',pattern:['belly']}},
+  {id:'grouper',name:'石斑魚',rarity:'common',color:'#8E7A62',color2:'#B9A486',line:'慢慢長，長很大。',f:{sy:.95,tail:'round',pattern:['spots']}},
+  {id:'betta',name:'鬥魚',rarity:'rare',color:'#C94B6D',color2:'#E98AA6',line:'這口飼料，值得戰鬥。'},
+  {id:'angel',name:'神仙魚',rarity:'rare',color:'#E9D07A',color2:'#C8B25A',line:'今天也優雅地前進了。'},
+  {id:'cory',name:'鼠魚',rarity:'rare',color:'#E2CDA8',color2:'#8C7356',line:'在缸底也能慢慢進步。'},
+  {id:'discus',name:'七彩神仙',rarity:'rare',color:'#46AEBE',color2:'#F2894E',color3:'#F7C873',line:'每天多一種顏色。',f:{sx:.9,sy:1.3,tail:'small',dorsal:'skirt',dc:'c3',pattern:['patches']}},
+  {id:'lionhead',name:'獅子頭金魚',rarity:'rare',color:'#F28A3B',color2:'#F9C27C',line:'頭上的帽子又長大了。',f:{sy:1.05,tail:'fan',dorsal:'none',head:'cap'}},
+  {id:'butterfly',name:'蝴蝶魚',rarity:'rare',color:'#F7D046',color2:'#FFF2B0',color3:'#3C3F5A',line:'輕輕飛過今天的關卡。',f:{sx:.9,sy:1.25,tail:'small',dorsal:'skirt',dc:'c2',pattern:['eyeband']}},
+  {id:'damsel',name:'雀鯛',rarity:'rare',color:'#4A84F2',color2:'#9CC2FF',line:'藍藍的，很有精神。',f:{tail:'fork',dorsal:'skirt',dc:'c2',pattern:['belly']}},
+  {id:'clownloach',name:'皇冠三間',rarity:'rare',color:'#F59A2E',color2:'#2E3346',color3:'#E2483B',line:'三條紋，一個目標。',f:{sx:1.15,sy:.82,tail:'fork',tc:'c3',dc:'c3',pattern:['bands']}},
+  {id:'oscar',name:'地圖魚',rarity:'rare',color:'#4E5568',color2:'#F28A3B',color3:'#F7B05E',line:'畫出自己的地圖。',f:{tail:'round',pattern:['patches']}},
+  {id:'flowerhorn',name:'羅漢魚',rarity:'rare',color:'#E26A55',color2:'#F7A38A',color3:'#E26A55',line:'額頭裝滿好運。',f:{tail:'round',head:'hump',pattern:['spots']}},
+  {id:'bluegourami',name:'藍曼龍',rarity:'rare',color:'#7FA5D6',color2:'#3E5C8C',line:'兩個小點，一個目標。',f:{tail:'round',pattern:['tailspot']}},
+  {id:'kissing',name:'接吻魚',rarity:'rare',color:'#F4C9C0',color2:'#FFE6E0',color3:'#F29A9A',line:'啾，給今天的你。',f:{head:'beak',pattern:['belly']}},
+  {id:'rainbowfish',name:'電光美人',rarity:'rare',color:'#6FA8DC',color2:'#F2C14E',color3:'#3E6FA8',line:'閃一下就很耀眼。',f:{sy:1.1,pattern:['back','belly']}},
+  {id:'ram',name:'七彩鳳凰',rarity:'rare',color:'#F2D47A',color2:'#5AA9F0',color3:'#E8553F',line:'把每天都過得很鮮豔。',f:{dorsal:'tall',dc:'c3',pattern:['front','spots']}},
+  {id:'apisto',name:'阿卡西',rarity:'rare',color:'#F2C35E',color2:'#F28A3B',line:'小身體，大氣勢。',f:{dorsal:'tall',dc:'c2',tail:'lyre',tc:'c2'}},
+  {id:'bichir',name:'恐龍魚',rarity:'rare',color:'#9A8E6E',color2:'#C9BE9C',line:'活化石也還在進步。',f:{sx:1.4,sy:.55,tail:'round',dorsal:'crest',dc:'c2',pattern:['spots']}},
+  {id:'elephantnose',name:'象鼻魚',rarity:'rare',color:'#4E4A5A',color2:'#8E879C',color3:'#4E4A5A',line:'用鼻子探索下一步。',f:{head:'bill',pattern:['bands']}},
+  {id:'glassfish',name:'玻璃魚',rarity:'rare',color:'#E3EDF5',color2:'#FFFFFF',color3:'#BFD0E0',line:'透明地面對自己。',f:{sy:1.05,pattern:['hband']}},
+  {id:'archer',name:'射水魚',rarity:'rare',color:'#E8E3C8',color2:'#3A3F55',line:'瞄準，發射！',f:{sx:1.05,pattern:['spots']}},
+  {id:'gramma',name:'草莓魚',rarity:'rare',color:'#B07ADC',color2:'#F6D33C',line:'一半紫一半黃，兩邊都要。',f:{pattern:['rear']}},
+  {id:'mandarin',name:'青蛙魚',rarity:'rare',color:'#3E8ED6',color2:'#F28A3B',color3:'#7ED3B2',line:'花紋多到數不完。',f:{tail:'round',dorsal:'tall',dc:'c2',pattern:['patches']}},
+  {id:'dwarfpuffer',name:'金娃娃',rarity:'rare',color:'#E6D27A',color2:'#5E6B4A',line:'小小的，但很勇敢。',f:{sx:.9,sy:1.05,tail:'small',pattern:['spots']}},
+  {id:'clownknife',name:'七星刀',rarity:'rare',color:'#BFC6D0',color2:'#3A3F55',line:'七顆星，照亮路。',f:{sx:1.3,sy:.8,tail:'tiny',dorsal:'none',pattern:['spots']}},
+  {id:'redtailcat',name:'紅尾鴨嘴',rarity:'rare',color:'#5A5F6E',color2:'#F2F0EA',color3:'#E8553F',line:'尾巴紅紅，衝勁滿滿。',f:{tc:'c3',head:'whisker',pattern:['belly']}},
+  {id:'blueacara',name:'藍珍珠',rarity:'rare',color:'#6C8FB0',color2:'#AFD0F0',line:'一顆顆藍色的進度。',f:{tail:'round',pattern:['pearls']}},
+  {id:'koi',name:'錦鯉',rarity:'epic',color:'#FFF6EE',color2:'#E85A3C',line:'好運是自己餵出來的。'},
+  {id:'puffer',name:'河豚',rarity:'epic',color:'#EAC95E',color2:'#B79A3C',line:'吃飽了，我要膨脹了。'},
+  {id:'sunfish',name:'翻車魚',rarity:'epic',color:'#BCC8DA',color2:'#93A3BC',line:'慢慢的，但沒有翻車。'},
+  {id:'boxfish',name:'箱魨',rarity:'epic',color:'#F2D23E',color2:'#3A3F55',line:'方方正正，穩穩前進。',f:{sx:.95,sy:.95,body:'box',tail:'round',dorsal:'none',pattern:['spots']}},
+  {id:'lionfish',name:'獅子魚',rarity:'epic',color:'#F4AE8C',color2:'#D2553E',color3:'#FBE3D6',line:'張開鰭，氣勢滿滿。',f:{tail:'round',tc:'c3',dorsal:'lion',pattern:['bands']}},
+  {id:'yellowtang',name:'黃金吊',rarity:'epic',color:'#F6D33C',color2:'#FBE88A',line:'像陽光一樣準時出現。',f:{sx:.95,sy:1.28,tail:'fork',dorsal:'skirt',dc:'c2'}},
+  {id:'batfish',name:'燕魚',rarity:'epic',color:'#ECE5D3',color2:'#C9A66B',color3:'#5A5248',line:'展翅，往上游。',f:{sx:.85,sy:1.12,tail:'small',tc:'c2',dorsal:'bat',pattern:['eyeband']}},
+  {id:'parrot',name:'鸚鵡魚',rarity:'epic',color:'#7ED3B2',color2:'#F7E58A',color3:'#F49AC1',line:'咔滋咔滋，消化完畢。',f:{tail:'lyre',tc:'c3',dc:'c3',head:'beak',pattern:['belly']}},
+  {id:'sacaba',name:'薩卡班甲魚',rarity:'epic',color:'#A9B3BE',color2:'#E7EBEF',line:'睜大眼睛，看著你前進。'},
+  {id:'frogfish',name:'躄魚',rarity:'epic',color:'#F2A6B8',color2:'#F7D0DA',line:'慢吞吞，但抓得住機會。',f:{sx:.85,sy:1.1,tail:'round',dorsal:'none',pattern:['spots']}},
+  {id:'cardinalfish',name:'天竺鯛',rarity:'epic',color:'#F2D7C9',color2:'#E86A5F',line:'條紋整整齊齊。',f:{sy:1.05,dorsal:'tall',pattern:['bands']}},
+  {id:'cowfish',name:'角箱魨',rarity:'epic',color:'#E9C25A',color2:'#5AA9F0',line:'方方的，一步一步。',f:{body:'box',tail:'round',dorsal:'none',pattern:['spots']}},
+  {id:'regalangel',name:'皇后神仙',rarity:'epic',color:'#5A7FD0',color2:'#F6D33C',line:'優雅又堅定。',f:{sy:1.1,dorsal:'skirt',dc:'c2',pattern:['bands']}},
+  {id:'emperorangel',name:'皇帝神仙',rarity:'epic',color:'#2E4E8E',color2:'#F6D33C',line:'今天的我是皇帝。',f:{sy:1.15,dorsal:'skirt',dc:'c2',pattern:['bands']}},
+  {id:'queentrigger',name:'女王炮彈',rarity:'epic',color:'#6FA8DC',color2:'#F2C14E',line:'砰！目標達成。',f:{dorsal:'tall',tail:'lyre',pattern:['front']}},
+  {id:'picasso',name:'鴛鴦炮彈',rarity:'epic',color:'#E9E3D2',color2:'#3A3F55',color3:'#F2A33A',line:'每一天都像一幅畫。',f:{pattern:['patches']}},
+  {id:'flameangel',name:'火焰仙',rarity:'epic',color:'#F05A3C',color2:'#3A3F55',color3:'#FFB05E',line:'燃燒吧，小宇宙！',f:{sy:1.05,dorsal:'skirt',dc:'c3',pattern:['bands']}},
+  {id:'jawfish',name:'黃頭後頜',rarity:'epic',color:'#E6ECF3',color2:'#F6D33C',line:'探出頭來看看世界。',f:{sx:1.2,sy:.7,tail:'round',pattern:['front']}},
+  {id:'garibaldi',name:'高歡雀鯛',rarity:'epic',color:'#F28A3B',color2:'#FFB05E',line:'橘色的熱情。',f:{sy:1.1,dorsal:'skirt',dc:'c2'}},
+  {id:'lookdown',name:'銀鏡魚',rarity:'epic',color:'#DCE3EC',color2:'#FFFFFF',line:'照照鏡子，給自己按讚。',f:{sx:.8,sy:1.4,dorsal:'tall',tail:'fork'}},
+  {id:'opah',name:'月魚',rarity:'epic',color:'#E86A6A',color2:'#FFFFFF',color3:'#E5484D',line:'月亮出來陪你了。',f:{sx:.95,sy:1.15,tail:'lyre',tc:'c3',dc:'c3',pattern:['spots']}},
+  {id:'blobfish',name:'水滴魚',rarity:'epic',color:'#F2B8C0',color2:'#F7D6DB',color3:'#E8949E',line:'軟軟的，但不洩氣。',f:{sy:.9,tail:'tiny',dorsal:'none',pattern:['nose']}},
+  {id:'seabream',name:'真鯛',rarity:'epic',color:'#F08A8A',color2:'#FFD3D3',line:'好事成雙，好運成鯛。',f:{dorsal:'tall',pattern:['belly']}},
+  {id:'mudskipper',name:'彈塗魚',rarity:'epic',color:'#8E8A6E',color2:'#C9C3A0',color3:'#5AA9F0',line:'跳出舒適圈！',f:{sx:1.2,sy:.75,tail:'round',dorsal:'tall',dc:'c3',pattern:['spots']}},
+  {id:'mahimahi',name:'鬼頭刀',rarity:'epic',color:'#4FB59A',color2:'#F2D04E',color3:'#4FB59A',line:'全速前進，不回頭。',f:{sx:1.2,sy:.8,tail:'lyre',tc:'c2',dorsal:'crest',dc:'c1',head:'hump',pattern:['belly']}},
+  {id:'arowana',name:'龍魚',rarity:'legendary',color:'#E58A3A',color2:'#F4C06A',line:'鱗片又多亮了一片。'},
+  {id:'whaleshark',name:'鯨鯊',rarity:'legendary',color:'#5F82AE',color2:'#EAF1FA',line:'慢慢來，但一直在游。'},
+  {id:'manta',name:'鬼蝠魟',rarity:'legendary',color:'#4D6185',color2:'#E2E9F3',line:'展開翅膀，飛一下。'},
+  {id:'angler',name:'燈籠魚',rarity:'legendary',color:'#6A5A8C',color2:'#FFE27A',line:'我替你點亮下一步。'},
+  {id:'oarfish',name:'皇帶魚',rarity:'legendary',color:'#DCE1EA',color2:'#E5484D',color3:'#9AA6B8',line:'從深海帶來好消息。',f:{sx:1.5,sy:.48,tail:'tiny',dorsal:'crest',pattern:['dots3']}},
+  {id:'coelacanth',name:'腔棘魚',rarity:'legendary',color:'#40608F',color2:'#E8EEF7',line:'四億年的耐心，借你一點。',f:{sx:1.12,sy:.85,tail:'lobe',dc:'c1',pattern:['spots']}},
+  {id:'sailfish',name:'旗魚',rarity:'legendary',color:'#3D6FB6',color2:'#BCD5F2',color3:'#2A4E8A',line:'全速衝刺！',f:{sx:1.2,sy:.72,tail:'lyre',dorsal:'sail',dc:'c3',head:'bill',pattern:['belly']}},
+  {id:'hammerhead',name:'錘頭鯊',rarity:'legendary',color:'#8E9DB2',color2:'#E6ECF3',line:'敲定今天的進度。',f:{sx:1.15,sy:.72,tail:'shark',dorsal:'tall',dc:'c1',head:'hammer',eyes:1,pattern:['belly']}},
+  {id:'napoleon',name:'拿破崙魚',rarity:'legendary',color:'#4FA7A0',color2:'#8ED6C8',color3:'#3E9089',line:'額頭裝滿了智慧。',f:{tail:'round',dorsal:'skirt',dc:'c2',head:'hump',pattern:['belly']}},
+  {id:'bluefin',name:'黑鮪魚',rarity:'legendary',color:'#2F4E7E',color2:'#DCE4F0',color3:'#F2D04E',line:'一路游過整片海洋。',f:{sx:1.15,sy:.8,tail:'lyre',tc:'c3',dorsal:'tall',dc:'c1',pattern:['belly']}},
+  {id:'swordfish',name:'劍旗魚',rarity:'legendary',color:'#2E5C9A',color2:'#BCD5F2',color3:'#1F3F6E',line:'劈開所有阻礙。',f:{sx:1.2,sy:.75,tail:'lyre',dorsal:'tall',dc:'c3',head:'bill',pattern:['belly']}},
+  {id:'greatwhite',name:'大白鯊',rarity:'legendary',color:'#8A98AE',color2:'#F2F5F8',line:'其實我只想吃飼料。',f:{sx:1.2,sy:.78,tail:'shark',dorsal:'tall',dc:'c1',pattern:['belly']}},
+  {id:'thresher',name:'狐鮫',rarity:'legendary',color:'#7A6E9C',color2:'#E6E2F0',line:'用長尾巴甩開拖延。',f:{sx:1.1,sy:.75,tail:'shark',tw:1.7,dorsal:'tall',dc:'c1',pattern:['belly']}},
+  {id:'sturgeon',name:'鱘龍魚',rarity:'legendary',color:'#6F7C86',color2:'#C9D1D8',color3:'#6F7C86',line:'古老又穩重。',f:{sx:1.45,sy:.55,tail:'shark',dc:'c1',head:'bill',pattern:['spots']}},
+  {id:'formosansalmon',name:'櫻花鉤吻鮭',rarity:'legendary',color:'#9AA79A',color2:'#E8A0B0',color3:'#5E6B5A',line:'國寶級的堅持。',f:{dc:'c1',pattern:['belly','dots3']}},
+  {id:'arapaima',name:'巨骨舌魚',rarity:'legendary',color:'#5E6B5A',color2:'#E5484D',line:'亞馬遜的巨人。',f:{sx:1.45,sy:.6,tail:'round',tc:'c2',dorsal:'none',pattern:['rear']}},
+  {id:'dunkleosteus',name:'鄧氏魚',rarity:'legendary',color:'#6E7891',color2:'#B9C2D0',line:'遠古的盔甲，現在的決心。',f:{sx:1.2,tail:'shark',dc:'c1',pattern:['front']}},
+  {id:'megamouth',name:'巨口鯊',rarity:'legendary',color:'#4E4A6A',color2:'#C9C3DD',line:'大口吃下每一份努力。',f:{sx:1.2,sy:.85,tail:'shark',dorsal:'tall',dc:'c1',pattern:['belly']}},
+  {id:'goldenarowana',name:'金龍魚',rarity:'legendary',color:'#F2C14E',color2:'#FFE38A',line:'金光閃閃的成果。',f:{sx:1.3,sy:.68,tail:'round',dorsal:'none',pattern:['spots']}},
+  {id:'chimaera',name:'銀鮫',rarity:'legendary',color:'#C9C6DD',color2:'#F2F0FA',line:'幽靈一樣安靜地前進。',f:{sx:1.3,sy:.7,tail:'shark',dorsal:'tall',dc:'c1',pattern:['belly']}}
+];
+const TYPES = {
+  short:{label:'短期',hint:'1–14 天',days:7,freq:'daily',miss:2,deadlineH:24},
+  mid:{label:'中期',hint:'2 週–3 個月',days:60,freq:'weekly',miss:3,deadlineH:72},
+  long:{label:'長期',hint:'3–12 個月',days:180,freq:'interval',miss:3,deadlineH:72}
+};
+// 一般魚三階段、傳說魚四階段；最後一階段都會變成塞滿魚缸的圓球
+const STAGE_NAMES = {3:['魚苗','成魚','圓滾滾'], 4:['魚苗','幼魚','成魚','圓滾滾']};
+const stageCount = id => sp(id).rarity === 'legendary' ? 4 : 3;
+const stageName = (id, i) => STAGE_NAMES[stageCount(id)][Math.min(i, stageCount(id)-1)];
+const vStage = (id, i) => (stageCount(id) === 4 ? [0,1,3,4] : [0,2,4])[Math.min(i, stageCount(id)-1)];
+const WD = ['日','一','二','三','四','五','六'];
+const H = 3600e3, D = 24*H;
+
+const DESC = {
+goldfish:'由鯽魚經過一千多年人工選育而來，是最古老的觀賞魚之一。好養又親人，很適合當第一條魚。',
+guppy:'原產南美洲的小型卵胎生魚，公魚有色彩繽紛的大尾巴。繁殖力強，是入門水族的代表。',
+zebra:'身上有藍白相間的水平條紋，活潑又耐養。也是科學研究常用的模式生物。',
+neon:'來自亞馬遜流域，身上有一條會反光的藍色亮帶。喜歡成群游動，像一串小燈。',
+whitecloud:'原產中國廣東白雲山一帶，能適應較低的水溫。體型嬌小，鰭邊帶有紅色。',
+swordtail:'公魚尾鰭下緣延長成像劍一樣的形狀，因而得名。個性活潑，游速很快。',
+pearlgourami:'全身布滿珍珠般的白色斑點，屬於迷鰓魚，可以直接呼吸空氣。',
+balloonmolly:'經過選育、肚子圓鼓鼓的茉莉魚。游起來搖搖擺擺，模樣很討喜。',
+rummynose:'頭部是鮮紅色，尾巴有黑白條紋。紅色越鮮豔，通常代表水質越好。',
+platy:'溫和好養的卵胎生小魚，顏色多樣。常被推薦給新手。',
+tigerbarb:'金黃色的身體上有四條黑色直紋，像小老虎。精力旺盛，喜歡追逐。',
+cherrybarb:'原產斯里蘭卡，公魚發情時全身會轉成櫻桃紅色。',
+harlequin:'身體後半有一塊黑色三角形斑紋，是很受歡迎的群游魚。',
+glowlight:'身上有一條橘紅色的光帶，在暗處看起來像會發光。',
+cardinal:'和霓虹燈魚很像，但紅色從頭一路延伸到尾巴。是亞馬遜的代表魚種。',
+blackskirt:'背鰭和臀鰭又黑又寬，游動時像穿著蓬蓬裙。',
+penguin:'身體淡色，從腰部到尾巴有一條黑線，游動的姿態有點像企鵝。',
+bloodparrot:'人工雜交出來的慈鯛，身體圓潤，嘴巴小小的總是張開，像在微笑。',
+pearldanio:'斑馬魚的近親，身體帶有珍珠般的光澤，非常活潑。',
+blueeye:'眼睛上方有一圈亮藍色，在水裡看起來閃閃發亮。',
+endler:'孔雀魚的近親，體型更小，色彩卻更鮮豔。',
+medaka:'東亞稻田和溝渠裡常見的小魚，台灣也有原生族群，是科學研究常用的魚。',
+paradise:'台灣原生的迷鰓魚，公魚會吐泡泡築巢、守護魚卵。現在野外族群已不多。',
+hatchet:'胸部又寬又薄，形狀像斧頭。常在水面附近活動，受驚時還能躍出水面。',
+otocinclus:'小型的吸盤魚，整天在缸壁和葉片上啃食藻類，是缸裡的清潔小幫手。',
+blackmolly:'全身黝黑的卵胎生魚，可以適應帶一點鹽分的水。',
+kuhli:'細長得像小蛇，身上有一圈圈的環紋。喜歡鑽進底砂裡躲起來。',
+bristlenose:'公魚的吻部會長出一叢叢肉鬚，像大鬍子。會吸附在沉木上刮食藻類。',
+bumblebee:'黃黑相間的條紋像小蜜蜂。體型只有兩三公分，喜歡待在底部。',
+lemontetra:'身體帶淡淡的檸檬黃，臀鰭有黃黑色的邊。',
+tilapia:'原產非洲，適應力極強，在台灣是重要的養殖魚。母魚會把魚卵和小魚含在嘴裡保護。',
+crucian:'亞洲淡水中很常見的魚，也是金魚的祖先。',
+loach:'嘴邊有鬍鬚，身體滑溜，喜歡鑽在泥裡。水中缺氧時還能用腸子呼吸。',
+mosquitofish:'會大量吃孑孓而被引進世界各地，母魚的肚子常常圓鼓鼓的。',
+carp:'淡水中的大型魚，嘴邊有兩對鬚。「鯉躍龍門」的故事讓牠成為努力向上的象徵。',
+ayu:'生命只有一年，在溪流裡啃食石頭上的藻類。身上帶有淡淡的香氣，所以叫香魚。',
+saury:'身體細長、嘴巴尖尖，秋天最肥美，是很受歡迎的烤魚。',
+milkfish:'台灣南部最重要的養殖魚之一，肉質細嫩但刺很多。虱目魚粥是台南人的早餐。',
+horsemackerel:'身體側邊有一排稜鱗，常常成群洄游，是常見的食用魚。',
+mackerel:'背上有藍綠色的花紋，游泳能力很強，富含魚油。',
+sardine:'體型小，常常成千上萬一起游動，形成壯觀的魚群「魚球」。',
+blackneon:'身上有一條黑色和一條亮白色的線，眼睛上緣帶紅色，安靜又好養。',
+rosytetra:'身體帶淡淡的玫瑰色，背鰭上有黑白相間的旗幟狀斑紋。',
+balashark:'銀色的身體配上黑邊的鰭，外形像小鯊魚，其實是溫和的鯉科魚。',
+goldtetra:'鱗片會反射金色光澤，喜歡成群活動。',
+algaeeater:'嘴巴是吸盤，年輕時會努力吃藻類，長大後食性會改變。',
+krib:'原產西非的小型慈鯛，母魚肚子是漂亮的紅色，夫妻會一起照顧小魚。',
+goby:'鰕虎魚種類非常多，有些腹鰭合成吸盤，可以吸附在石頭上。台灣溪流裡也很常見。',
+seabass:'嘴巴很大的肉食魚，可以生活在海水、淡水交界處，是常見的高級食用魚。',
+grouper:'珊瑚礁和岩礁間的大型魚，很多種類小時候是雌魚，長大後會變成雄魚。',
+betta:'原產泰國的迷鰓魚，公魚有華麗的長鰭，彼此地盤意識很強，要分開飼養。',
+angel:'原產亞馬遜，身體側扁、鰭又高又長，游起來很優雅。',
+cory:'嘴邊有鬍鬚的小型鯰魚，喜歡在缸底翻找食物，偶爾會快速游到水面吸一口氣。',
+discus:'被稱為「熱帶魚之王」，身體像圓盤一樣，色彩變化非常多。親魚會分泌黏液餵小魚。',
+lionhead:'頭上長了發達的肉瘤，像獅子的鬃毛。沒有背鰭，游起來圓滾滾的。',
+butterfly:'珊瑚礁裡的明星，身體側扁。很多種類有一條穿過眼睛的深色帶，用來掩護眼睛。',
+damsel:'珊瑚礁裡常見的小型魚，顏色鮮豔，雖然體型小但很會守護地盤。',
+clownloach:'橘色身體上有三條黑色寬帶，個性好奇愛熱鬧，有時會側躺休息嚇到主人。',
+oscar:'身上的花紋像地圖，很聰明，會認主人，還會把缸裡的造景搬來搬去。',
+flowerhorn:'人工雜交的慈鯛，額頭有大大的肉瘤，被很多人視為招財的好兆頭。',
+bluegourami:'淡藍色的迷鰓魚，身上有兩個深色圓點。會用細長的腹鰭碰觸東西來感覺環境。',
+kissing:'兩條魚會把嘴巴貼在一起，看起來像接吻，其實是在比力氣。',
+rainbowfish:'原產澳洲和新幾內亞，身體會隨光線閃出不同的顏色。',
+ram:'小型慈鯛，身上有藍色亮點和紅色眼睛，色彩非常華麗。',
+apisto:'南美洲的小型慈鯛，公魚的鰭又高又尖，求偶時會展開炫耀。',
+bichir:'外形像小恐龍的古老魚類，有原始的肺可以呼吸空氣，背上有一排小旗子般的鰭。',
+elephantnose:'嘴巴下方延伸出像象鼻的構造，能發出微弱電場來找食物。',
+glassfish:'身體幾乎透明，可以看見骨骼和內臟。',
+archer:'會從水裡射出水柱，把停在葉子上的昆蟲打下來吃，命中率很高。',
+gramma:'前半身是紫色、後半身是黃色，在珊瑚礁的洞穴旁活動。',
+mandarin:'身上有迷宮般的藍橘色花紋，是最美麗的海水魚之一。',
+dwarfpuffer:'世界上最小的河豚之一，只有兩三公分，好奇心很強。',
+clownknife:'身體側扁像刀子，靠著長長的臀鰭波浪擺動前進，身上有一排圓點。',
+redtailcat:'南美洲的大型鯰魚，尾巴是鮮紅色，嘴邊有長長的鬍鬚。',
+blueacara:'身上布滿藍色亮點的慈鯛，個性比較溫和。',
+koi:'由鯉魚選育而來的觀賞魚，被稱為「會游泳的寶石」。可以活好幾十年。',
+puffer:'遇到危險時會吸水把身體撐成一顆球。很多種類體內帶有毒素。',
+sunfish:'世界上最重的硬骨魚之一，身體後半像被切掉一樣。常常側躺在海面曬太陽。',
+boxfish:'身體被堅硬的骨板包成方盒子，只有鰭能動，游起來像小潛水艇。',
+lionfish:'鰭像獅子的鬃毛一樣張開，非常華麗，但鰭棘有毒，不能用手碰。',
+yellowtang:'全身亮黃色的珊瑚礁魚，尾巴根部有一根像刀片的硬棘。',
+batfish:'小時候的鰭又高又長，會模仿落葉漂在水中躲避天敵。',
+parrot:'嘴巴像鸚鵡的喙，會啃食珊瑚上的藻類。牠排出的沙是白沙灘的來源之一。',
+sacaba:'生活在約四億五千萬年前的無頜魚，眼睛長在頭部最前面、分得很開，因為呆萌的模樣成為網路紅魚。',
+frogfish:'胸鰭像小手，可以在海底「走路」。很會偽裝，靠頭上的小誘餌引誘獵物。',
+cardinalfish:'夜行性的小型魚，公魚會把魚卵含在嘴裡孵化。',
+cowfish:'箱魨的親戚，頭上有兩根像牛角的突起。',
+regalangel:'身上有藍、黃、白相間的條紋，是很受歡迎的海水神仙魚。',
+emperorangel:'成魚身上有藍黃相間的條紋，幼魚時期的花紋完全不同，看起來像另一種魚。',
+queentrigger:'臉上有藍色的線條，背鰭的硬棘可以豎起來卡在岩縫裡，避免被拉出來。',
+picasso:'身上的色塊和線條像抽象畫，因此得名，個性很有主見。',
+flameangel:'全身像火焰一樣的橘紅色，身側有深色直紋，是小型神仙魚裡的明星。',
+jawfish:'會在沙地挖洞，從洞口探出頭來觀察四周。公魚會把卵含在嘴裡保護。',
+garibaldi:'全身亮橘色的大型雀鯛，是加州的州魚。',
+lookdown:'身體又薄又高，額頭很陡，看起來像總是在往下看。銀色身體像鏡子一樣反光。',
+opah:'圓圓的大型深海魚，是少數能讓身體保持溫暖的魚類之一。',
+blobfish:'生活在深海的高壓環境裡，身體本來是正常的魚形，被拉到水面時才會塌成一團。',
+seabream:'全身粉紅色的高級食用魚，在日本被視為吉祥的象徵。',
+mudskipper:'可以離開水在泥灘上跳躍、爬行，用皮膚和嘴巴呼吸空氣。台灣的濕地很常見。',
+mahimahi:'游速很快的大洋魚，公魚的額頭會隨年紀變得又高又方。身體色彩鮮豔。',
+arowana:'古老的大型淡水魚，下巴有一對鬚，可以跳出水面捕食昆蟲。',
+whaleshark:'世界上最大的魚，身上有白色斑點。雖然體型巨大，卻是用濾食吃浮游生物。',
+manta:'胸鰭展開像一對翅膀，寬度可達數公尺。會在海中優雅地「飛行」。',
+angler:'深海鮟鱇類，頭上有會發光的小燈籠，用來吸引獵物靠近。',
+oarfish:'世界上最長的硬骨魚，身體像一條銀色緞帶，背上有一長條紅色背鰭。',
+coelacanth:'曾被認為已經滅絕，1938 年又被發現還活著，被稱為「活化石」。',
+sailfish:'背上有像船帆一樣的巨大背鰭，是海中游得最快的魚之一。',
+hammerhead:'頭部向兩側延伸成錘子形狀，眼睛長在錘子兩端，視野非常寬廣。',
+napoleon:'珊瑚礁裡的大型魚，額頭會隆起一大塊，臉上有迷宮般的花紋。',
+bluefin:'大型洄游魚，游泳能力極強，可以橫越整個大洋。',
+swordfish:'上顎延長成扁平的劍，游速很快，會用劍揮擊魚群捕食。',
+greatwhite:'大型掠食性鯊魚，嗅覺非常敏銳。其實很少主動攻擊人。',
+thresher:'尾鰭上葉長得跟身體差不多長，會用尾巴甩打魚群來捕食。',
+sturgeon:'古老的大型魚類，身上有一排排骨板，從恐龍時代就存在了。',
+formosansalmon:'台灣特有的國寶魚，冰河時期留在高山溪流裡，現在主要生活在大甲溪上游。',
+arapaima:'世界上最大的淡水魚之一，必須定時浮上水面呼吸空氣。',
+dunkleosteus:'約三億六千萬年前的巨型盾皮魚，頭部被厚厚的骨甲包住，咬合力驚人。',
+megamouth:'1976 年才被發現的深海鯊魚，嘴巴很大，以浮游生物為食，目擊紀錄非常稀少。',
+goldenarowana:'龍魚中的珍貴品種，鱗片帶有金色光澤，被視為帶來好運的魚。',
+chimaera:'深海裡的軟骨魚，和鯊魚是遠親，大大的眼睛和細長的尾巴讓牠看起來像幽靈。'
+};
+
+// ---------- 狀態 ----------
+const S = {
+  view:'home', tab:'home', goals:[], feeds:[], cur:null, wiz:null, feedDraft:null,
+  lastResult:null, unlockAll:false, timeShift:0, store:null, sample:null, ready:false, busy:false, modal:null
+};
+const now = () => Date.now() + S.timeShift;
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const sp = id => SPECIES.find(s => s.id === id) || SPECIES[0];
+const uid = () => Math.random().toString(36).slice(2,10) + Date.now().toString(36);
+const pad = n => String(n).padStart(2,'0');
+const fmt = t => { const d = new Date(t); return `${d.getMonth()+1}/${d.getDate()} ${pad(d.getHours())}:${pad(d.getMinutes())}`; };
+const fmtD = t => { const d = new Date(t); return `${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()}`; };
+const dateInput = t => { const d = new Date(t); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; };
+
+// ---------- 儲存層（雲端 db，退而求其次用瀏覽器） ----------
+const CFG = window.FISH_CONFIG || {};
+const sb = (CFG.supabaseUrl && CFG.supabaseAnonKey && window.supabase) ? window.supabase.createClient(CFG.supabaseUrl, CFG.supabaseAnonKey) : null;
+const DEMO = !sb;   // 沒有設定 Supabase 時，以示範模式在本機執行
+const AI = !!(sb && CFG.aiReview);   // 是否啟用後端 AI 審核（目前預設關閉：上傳證明即算餵食成功）
+const LocalStore = {
+  kind:'local',
+  _get(){ try { return JSON.parse(localStorage.getItem('fishgoals') || '{"goals":[],"feeds":[]}'); } catch(e){ return this._mem || (this._mem = {goals:[],feeds:[]}); } },
+  _put(d){ this._mem = d; try { localStorage.setItem('fishgoals', JSON.stringify(d)); } catch(e){} },
+  async load(){ return this._get(); },
+  async save(col, obj){ const d = this._get(); const a = d[col]; const i = a.findIndex(x => x.id === obj.id); if(i>=0) a[i] = obj; else a.push(obj); this._put(d); },
+  async remove(col, id){ const d = this._get(); d[col] = d[col].filter(x => x.id !== id); this._put(d); }
+};
+// Supabase：目標由 App 直接存取；餵食紀錄只能由後端審核函式寫入，避免竄改審核結果
+const SupaStore = {
+  kind:'cloud',
+  async load(){
+    const [g, f] = await Promise.all([sb.from('goals').select('id,data'), sb.from('feeds').select('id,data')]);
+    if(g.error) throw g.error; if(f.error) throw f.error;
+    return {goals: g.data.map(r => r.data), feeds: f.data.map(r => r.data)};
+  },
+  async save(col, obj){
+    const row = col === 'goals' ? {id: obj.id, data: obj, updated_at: new Date().toISOString()} : {id: obj.id, goal_id: obj.goalId, data: obj};
+    const {error} = await sb.from(col).upsert(row);
+    if(error) throw error;
+  },
+  async remove(col, id){ const {error} = await sb.from(col).delete().eq('id', id); if(error) throw error; }
+};
+async function loadData(){
+  const d = await S.store.load(); S.goals = d.goals; S.feeds = d.feeds;
+}
+async function initCaps(){
+  if(DEMO){ S.store = LocalStore; await loadData(); S.ready = true; render(); return; }
+  S.store = SupaStore;
+  const {data:{session}} = await sb.auth.getSession();
+  S.user = session && session.user;
+  if(!S.user){ S.ready = true; S.view = 'login'; render(); return; }
+  try { await loadData(); } catch(e){ S.loadErr = '讀取資料失敗：' + (e.message || e); }
+  S.ready = true; if(S.view === 'login') S.view = 'home'; render();
+}
+if(sb) sb.auth.onAuthStateChange((ev, session) => {
+  const u = session && session.user;
+  if(ev === 'SIGNED_OUT'){ S.user = null; S.goals = []; S.feeds = []; go('login'); }
+  else if(ev === 'SIGNED_IN' && u && (!S.user || S.user.id !== u.id)){ S.user = u; loadData().then(() => go('home')).catch(e => alertInline('讀取資料失敗：' + (e.message||e))); }
+});
+async function saveGoal(g){ const i = S.goals.findIndex(x => x.id === g.id); if(i>=0) S.goals[i] = g; else S.goals.push(g); try { await S.store.save('goals', g); } catch(e){ console.warn(e); alertInline('儲存失敗，請檢查網路後再試一次。'); } }
+async function saveFeed(f){ await S.store.save('feeds', f); const i = S.feeds.findIndex(x => x.id === f.id); if(i>=0) S.feeds[i] = f; else S.feeds.push(f); }
+
+// ---------- 規則：餵食時段與魚的狀態 ----------
+function slotsOf(g){
+  const [hh, mm] = (g.time || '21:00').split(':').map(Number);
+  const out = []; const d = new Date(g.start); d.setHours(hh, mm, 0, 0);
+  const end = new Date(g.end); end.setHours(23,59,59,999);
+  const startDay = new Date(g.start); startDay.setHours(0,0,0,0);
+  let guard = 0;
+  while(d <= end && guard++ < 900){
+    const di = Math.round((new Date(d).setHours(0,0,0,0) - startDay) / D);
+    if(g.freq === 'daily' || (g.freq === 'weekly' && (g.days||[]).includes(d.getDay())) || (g.freq === 'interval' && di % (g.every||14) === 0)) out.push(d.getTime());
+    d.setDate(d.getDate()+1);
+  }
+  return out;
+}
+function allowedMiss(g){ return Math.max(1, TYPES[g.type].miss - RARITY[sp(g.species).rarity].penalty); }
+function stateOf(g){
+  const t = now(); const slots = slotsOf(g); const dlH = TYPES[g.type].deadlineH;
+  const feeds = S.feeds.filter(f => f.goalId === g.id).sort((a,b) => a.ts - b.ts);
+  const passedSlots = new Set(feeds.filter(f => f.verdict === 'pass').map(f => f.slot));
+  let pass = 0, missed = 0, hunger = 0, open = -1, next = null, streak = 0;
+  const marks = [];
+  slots.forEach((s, i) => {
+    const dl = Math.min(s + dlH*H, slots[i+1] ?? Infinity);
+    if(passedSlots.has(i)){ pass++; hunger = 0; marks.push('p'); }
+    else if(dl < t){ missed++; hunger++; marks.push('m'); }
+    else { marks.push(''); if(open < 0 && s - 18*H <= t) open = i; else if(next === null && s > t) next = s; }
+  });
+  if(open >= 0 && next === null) next = slots.find((s,i) => i > open && s > t) ?? null;
+  const total = slots.length || 1;
+  const growth = pass / total;
+  const nSt = stageCount(g.species), stage = Math.min(nSt - 1, Math.floor(growth * nSt));
+  const allowed = allowedMiss(g);
+  const endT = new Date(g.end).setHours(23,59,59,999);
+  let status = g.status || 'active';
+  if(status === 'active'){
+    if(missed > allowed) status = 'gone';
+    else if(t > endT) status = (pass/total >= .7) ? 'graduated' : 'barely';
+  }
+  return {slots, pass, missed, hunger, open, next, total, growth, stage, allowed, status, marks, feeds,
+          openDeadline: open >= 0 ? Math.min(slots[open] + dlH*H, slots[open+1] ?? Infinity) : null};
+}
+async function settleStatuses(){
+  for(const g of S.goals){
+    if(g.status && g.status !== 'active') continue;
+    const st = stateOf(g);
+    if(st.status !== 'active'){ g.status = st.status; g.endedAt = now(); await saveGoal(g); }
+  }
+}
+function graduatedCount(type){ return S.goals.filter(g => g.status === 'graduated' && (!type || type.includes(g.type))).length; }
+function unlocked(rarity){
+  if(S.unlockAll) return true;
+  if(rarity === 'common') return true;
+  if(rarity === 'rare') return graduatedCount() >= 1;
+  if(rarity === 'epic') return graduatedCount(['mid','long']) >= 1;
+  return graduatedCount(['long']) >= 1;
+}
+function rarityTabs(){
+  const opts = [['all','全部']].concat(Object.entries(RARITY).map(([k,r]) => [k, r.label]));
+  return `<div class="seg" style="margin:4px 0 12px">${opts.map(([k,l]) => `<button data-act="rfilter" data-v="${k}" class="${(S.rfilter||'all')===k?'on':''}">${l}<small>${k==='all'?SPECIES.length:SPECIES.filter(s=>s.rarity===k).length} 種</small></button>`).join('')}</div>`;
+}
+const shownSpecies = () => SPECIES.filter(s => !S.rfilter || S.rfilter === 'all' || s.rarity === S.rfilter);
+const unlockText = {common:'一開始就有', rare:'畢業任 1 條魚解鎖', epic:'畢業 1 個中期目標解鎖', legendary:'畢業 1 個長期目標解鎖'};
+
+// ---------- 魚與魚缸 SVG（原創造型） ----------
+function fishSVG(spec, stage, mood, opts={}){
+  const s = typeof spec === 'string' ? sp(spec) : spec;
+  const sil = opts.silhouette;
+  const ball = stage === 4; if(ball) stage = 3;
+  const c1 = sil ? '#6E7891' : s.color, c2 = sil ? '#6E7891' : s.color2, c3 = sil ? '#6E7891' : (s.color3 || s.color2);
+  const st = sil ? '#5A6379' : shade(s.color, -0.24);
+  const SW = `stroke="${st}" stroke-width="2.5" stroke-linejoin="round"`;
+  const hungry = mood === 'hungry';
+  const cx = 104, cy = 70;
+  let rx = [36,44,52,62][stage], ry = [21,26,33,40][stage];
+  const k = s.id;
+  if(k === 'arowana'){ rx *= 1.3; ry *= .68; }
+  if(k === 'whaleshark'){ rx *= 1.2; ry *= .8; }
+  if(k === 'zebra' || k === 'neon'){ rx *= 1.1; ry *= .8; }
+  if(k === 'cory'){ ry *= .92; }
+  if(k === 'puffer' && stage === 3){ rx = 56; ry = 54; }
+  if(k === 'sunfish'){ rx *= .9; ry = rx * (stage === 3 ? 1.02 : .95); }
+  if(k === 'angler'){ ry = rx * .86; }
+  if(ball){ rx = 58; ry = 54; }
+  if(hungry) ry *= .74;
+  let tail = '', back = '', body = '', deco = '', ex = cx + rx*.48, ey = cy - ry*.12, eyeR = stage === 3 ? 3.2 : 3.8, eyeGap = 6;
+
+  let ringEyes = false, aw = null, ah = null;
+  if(k === 'sacaba'){
+    // 薩卡班甲魚：圓鈍的大頭、往後收細的身體、小尾鰭、兩眼分很開
+    const hx = cx + rx*.12, hr = rx*.9, hy = ry * 1.02;
+    tail = `<path d="${rp([[cx-rx*1.02,cy],[cx-rx*1.02-22,cy-ry*.55],[cx-rx*1.02-14,cy],[cx-rx*1.02-22,cy+ry*.55]], .2)}" fill="${shade(c1,-.12)}" ${SW}/>`;
+    body = `<path d="${rp([[cx-rx*.35,cy-hy*.78],[cx-rx*1.05,cy-ry*.24],[cx-rx*1.05,cy+ry*.24],[cx-rx*.35,cy+hy*.78]], .2)}" fill="${c1}" ${SW}/>
+      <ellipse cx="${hx}" cy="${cy}" rx="${hr}" ry="${hy}" fill="${c1}" ${SW}/>
+      <path d="M${cx-rx*.3} ${cy-hy*.7} L${cx-rx*.36} ${cy+hy*.7}" stroke="${c1}" stroke-width="5"/>`;
+    if(!sil) deco = `<path d="M${hx-hr*.92} ${cy+hy*.25} Q${hx} ${cy+hy*.45} ${hx+hr*.96} ${cy+hy*.18} Q${hx+hr*.6} ${cy+hy*.95} ${hx} ${cy+hy*.98} Q${hx-hr*.7} ${cy+hy*.9} ${hx-hr*.92} ${cy+hy*.25}Z" fill="${c2}" opacity=".9"/>`;
+    ex = hx + hr*.5; ey = cy - hy*.12; eyeGap = stage === 3 ? 13 : 11; eyeR = stage === 3 ? 4.2 : 4.4; ringEyes = true;
+  } else if(k === 'manta'){
+    let w = [66,70,78,90][stage], h = (hungry ? .75 : 1) * [52,53,58,64][stage];
+    if(ball){ w = 84; h = 66; }
+    aw = w*.65; ah = h;
+    tail = `<path d="M${cx-w*.55} ${cy} q-24 2 -40 10" fill="none" stroke="${st}" stroke-width="2.5" stroke-linecap="round" opacity=".6"/>`;
+    body = `<g class="wings"><path d="${rp([[cx+w*.7,cy],[cx-w*.05,cy-h],[cx-w*.6,cy],[cx-w*.05,cy+h]], ball ? .5 : .18)}" fill="${c1}" ${SW}/>
+      ${sil ? '' : `<ellipse cx="${cx+w*.05}" cy="${cy}" rx="${w*.4}" ry="${h*.32}" fill="${c2}" opacity=".9"/>`}</g>
+      <path d="M${cx+w*.64} ${cy-6} q8 -6 6 -12 M${cx+w*.64} ${cy+6} q8 6 6 12" fill="none" stroke="${st}" stroke-width="3" stroke-linecap="round" opacity=".55"/>`;
+    ex = cx + w*.42; ey = cy - 3; eyeR = 3.4; eyeGap = 0;
+    eyeGap = 0;
+  } else if(s.f){
+    // 參數化魚種：體型、尾巴、背鰭、頭部特徵、花紋
+    const f = s.f, col = c => c === 'c2' ? c2 : c === 'c3' ? c3 : c1;
+    rx *= f.sx || 1; ry *= f.sy || 1;
+    if(ball){ rx = 58; ry = 54 * (hungry ? .74 : 1); }
+    ex = cx + rx*.5; ey = cy - ry*.15;
+    if(f.eyes === 1){ eyeGap = 0; ex = cx + rx*.62; }
+    const tl = cx - rx + 6, tw = (stage === 3 ? 20 : 28) * (f.tw || 1), th = (stage === 3 ? 16 : 22) * (f.th || 1);
+    const tc = col(f.tc || 'c1'), dc = col(f.dc || 'c2');
+    const T = {
+      fork: [[tl,cy],[tl-tw,cy-th],[tl-tw*.62,cy],[tl-tw,cy+th]],
+      lyre: [[tl,cy],[tl-tw*1.15,cy-th*1.25],[tl-tw*.6,cy],[tl-tw*1.15,cy+th*1.25]],
+      round: [[tl,cy],[tl-tw*.6,cy-th],[tl-tw,cy-th*.35],[tl-tw,cy+th*.35],[tl-tw*.6,cy+th]],
+      fan: [[tl,cy],[tl-tw*.8,cy-th*1.45],[tl-tw*1.3,cy-th*.4],[tl-tw*1.3,cy+th*.4],[tl-tw*.8,cy+th*1.45]],
+      small: [[tl,cy],[tl-tw*.62,cy-th*.68],[tl-tw*.62,cy+th*.68]],
+      tiny: [[tl,cy],[tl-tw*.4,cy-th*.4],[tl-tw*.4,cy+th*.4]],
+      shark: [[tl,cy],[tl-tw,cy-th*1.35],[tl-tw*.66,cy],[tl-tw*.82,cy+th*.62]],
+      lobe: [[tl,cy-th*.5],[tl-tw,cy-th],[tl-tw*1.25,cy],[tl-tw,cy+th],[tl,cy+th*.5]],
+      sword: [[tl,cy],[tl-tw,cy-th],[tl-tw*.62,cy],[tl-tw,cy+th]]
+    }[f.tail || 'fork'];
+    tail = `<path d="${rp(T, ['round','fan','lobe'].includes(f.tail) ? .3 : .1)}" fill="${tc}" ${SW}/>`;
+    if(f.tail === 'sword') tail += `<path d="${rp([[tl-6,cy+th*.35],[tl-tw*2.1,cy+th*.95],[tl-tw*.9,cy+th*1.05]], .15)}" fill="${c3}" ${SW}/>`;
+    // 背鰭
+    const d = f.dorsal || 'small';
+    if(d === 'small') back += `<path d="${rp([[cx-rx*.3,cy-ry+3],[cx-rx*.15,cy-ry-11],[cx+rx*.12,cy-ry+2]])}" fill="${dc}" ${SW}/>`;
+    if(d === 'tall') back += `<path d="${rp([[cx-rx*.35,cy-ry+4],[cx-rx*.12,cy-ry-ry*.8-8],[cx+rx*.15,cy-ry+4]])}" fill="${dc}" ${SW}/>`;
+    if(d === 'skirt') back += `<path d="${rp([[cx+rx*.4,cy-ry*.8],[cx+rx*.02,cy-ry-ry*.38-6],[cx-rx*.62,cy-ry*.72-6],[cx-rx*.85,cy-ry*.4]], .35)} ${rp([[cx+rx*.3,cy+ry*.85],[cx-rx*.05,cy+ry+ry*.32+5],[cx-rx*.62,cy+ry*.7+5],[cx-rx*.85,cy+ry*.4]], .35)}" fill="${dc}" ${SW}/>`;
+    if(d === 'sail') back += `<path d="${rp([[cx+rx*.35,cy-ry*.7],[cx+rx*.1,cy-ry-ry*1.5],[cx-rx*.5,cy-ry-ry*1.3],[cx-rx*.78,cy-ry*.6]], .25)}" fill="${dc}" ${SW}/>`;
+    if(d === 'crest') back += `<path d="${rp([[cx+rx*.82,cy-ry*.5],[cx+rx*.72,cy-ry-24],[cx+rx*.45,cy-ry-7],[cx-rx*.92,cy-ry*.3]], .3)}" fill="${dc}" ${SW}/>`;
+    if(d === 'bat') back += `<path d="${rp([[cx-rx*.45,cy-ry*.6],[cx-rx*.25,cy-ry-ry*1.2],[cx+rx*.3,cy-ry*.8]], .25)} ${rp([[cx-rx*.45,cy+ry*.6],[cx-rx*.25,cy+ry+ry*1.2],[cx+rx*.3,cy+ry*.8]], .25)}" fill="${dc}" ${SW}/>`;
+    if(d === 'lion'){
+      for(let i=0;i<5;i++){ const x0 = cx + rx*.3 - i*rx*.25;
+        back += `<path d="${rp([[x0-6,cy-ry*.8],[x0-4-i*2,cy-ry-ry*.75-6],[x0+4,cy-ry*.85]], .25)}" fill="${i%2?c1:c2}" ${SW} opacity=".92"/>`; }
+      back += `<path d="${rp([[cx+rx*.1,cy+ry*.3],[cx-rx*.45,cy+ry+ry*.6],[cx+rx*.25,cy+ry+ry*.45]], .3)}" fill="${c3}" ${SW} opacity=".9"/>`;
+    }
+    // 頭部（在身體後面）
+    if(f.head === 'bill') back += `<path d="${rp([[cx+rx-4,cy-ry*.16],[cx+rx+30,cy+1],[cx+rx-4,cy+ry*.2]], .15)}" fill="${c3}" ${SW}/>`;
+    if(f.head === 'hammer') back += `<rect x="${cx+rx*.55}" y="${cy-ry*.9}" width="${rx*.5}" height="${ry*1.8}" rx="${ry*.5}" fill="${c1}" ${SW}/>`;
+    // 身體
+    body = f.body === 'box' ? `<rect x="${cx-rx}" y="${cy-ry}" width="${rx*2}" height="${ry*2}" rx="${Math.min(rx,ry)*.5}" fill="${c1}" ${SW}/>`
+                            : `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="${c1}" ${SW}/>`;
+    // 錘頭鯊：用一塊無描邊的錘頭蓋住身體橢圓在錘頭內的弧線，讓頭和身體接成一體
+    if(f.head === 'hammer') body += `<rect x="${cx+rx*.55+1.3}" y="${cy-ry*.9+1.3}" width="${rx*.5-2.6}" height="${ry*1.8-2.6}" rx="${ry*.5-1.3}" fill="${c1}"/>`;
+    if(f.head === 'hump') body += `<ellipse cx="${cx+rx*.42}" cy="${cy-ry*.72}" rx="${rx*.36}" ry="${ry*.42}" fill="${c3}" ${SW}/>`;
+    if(f.head === 'cap') [[.35,.72],[.58,.52],[.12,.82]].forEach(([a,b]) => body += `<circle cx="${cx+rx*a}" cy="${cy-ry*b}" r="${(ry*.24).toFixed(1)}" fill="${c2}" ${SW}/>`);
+    if(f.head === 'whisker' && !sil) body += `<path d="M${cx+rx*.85} ${cy+ry*.35} q6 6 2 12 M${cx+rx*.72} ${cy+ry*.55} q4 7 -1 12" fill="none" stroke="${st}" stroke-width="2" stroke-linecap="round" opacity=".45"/>`;
+    if(f.head === 'beak') body += `<ellipse cx="${cx+rx*.9}" cy="${cy+ry*.12}" rx="${rx*.15}" ry="${ry*.24}" fill="${c3}" ${SW}/>`;
+    // 花紋（都用半透明柔和色塊）
+    if(!sil){
+      const inside = (dy, fr=.82) => rx * Math.sqrt(Math.max(0, 1 - (dy/ry)**2)) * fr;
+      const grid = (n, fill, r, op) => { let o = ''; for(let i=0;i<n;i++) o += `<circle cx="${cx - rx*.62 + (i%4)*rx*.25}" cy="${cy - ry*.32 + Math.floor(i/4)*ry*.42}" r="${r}" fill="${fill}" opacity="${op}"/>`; return o; };
+      (f.pattern || []).forEach(p => {
+        if(p === 'belly') deco += `<ellipse cx="${cx-rx*.05}" cy="${cy+ry*.42}" rx="${rx*.65}" ry="${ry*.32}" fill="${c2}" opacity=".5"/>`;
+        if(p === 'pearls') deco += grid(8, '#fff', 1.9, .75);
+        if(p === 'spots') deco += grid(8, c2, 2.5, .7);
+        if(p === 'dots3') deco += grid(8, c3, 2, .45);
+        if(p === 'hband') deco += `<ellipse cx="${cx-rx*.1}" cy="${cy-ry*.05}" rx="${rx*.72}" ry="${ry*.14}" fill="${c3}" opacity=".45"/>`;
+        if(p === 'nose') deco += `<ellipse cx="${cx+rx*.78}" cy="${cy+ry*.05}" rx="${rx*.2}" ry="${ry*.42}" fill="${c3}" opacity=".75"/>`;
+        if(p === 'patches') deco += `<ellipse cx="${cx-rx*.3}" cy="${cy-ry*.3}" rx="${rx*.32}" ry="${ry*.2}" fill="${c2}" opacity=".5"/><ellipse cx="${cx+rx*.05}" cy="${cy+ry*.35}" rx="${rx*.38}" ry="${ry*.18}" fill="${c3}" opacity=".5"/><ellipse cx="${cx-rx*.45}" cy="${cy+ry*.15}" rx="${rx*.2}" ry="${ry*.14}" fill="${c2}" opacity=".45"/>`;
+        if(p === 'eyeband') deco += `<ellipse cx="${ex}" cy="${cy}" rx="${rx*.17}" ry="${ry*.82}" fill="${c3 === c1 ? c2 : c3}" opacity=".22"/>`;
+        if(p === 'bands') [.42, 0, -.42].forEach(fx => deco += `<ellipse cx="${cx+rx*fx}" cy="${cy}" rx="${rx*.11}" ry="${ry*Math.sqrt(1-fx*fx)*.9}" fill="${c2}" opacity=".38"/>`);
+        if(p === 'rear') deco += `<ellipse cx="${cx-rx*.38}" cy="${cy}" rx="${rx*.42}" ry="${ry*.8}" fill="${c2}" opacity=".5"/>`;
+        if(p === 'tailspot') deco += `<circle cx="${cx-rx*.55}" cy="${cy}" r="${ry*.18}" fill="${c2}" opacity=".7"/><circle cx="${cx}" cy="${cy}" r="${ry*.16}" fill="${c2}" opacity=".6"/>`;
+        if(p === 'back') deco += `<ellipse cx="${cx}" cy="${cy-ry*.45}" rx="${rx*.8}" ry="${ry*.36}" fill="${c3}" opacity=".4"/>`;
+        if(p === 'front') deco += `<ellipse cx="${cx+rx*.45}" cy="${cy}" rx="${rx*.48}" ry="${ry*.82}" fill="${c2}" opacity=".45"/>`;
+      });
+    }
+  } else {
+    const tl = cx - rx + 6, tw = stage === 3 ? 20 : 28, th = stage === 3 ? 16 : 22;
+    // 尾巴（會擺動）
+    if(k === 'guppy') tail = `<path d="${rp([[tl,cy],[tl-tw-12,cy-th-10],[tl-tw,cy],[tl-tw-12,cy+th+10]])}" fill="${c2}" stroke="${sil?st:shade(s.color2,-.2)}" stroke-width="2.5" stroke-linejoin="round"/>`;
+    else if(k === 'betta') tail = `<path d="M${tl} ${cy} C${tl-30} ${cy-40} ${tl-46} ${cy-10} ${tl-40} ${cy} C${tl-48} ${cy+16} ${tl-30} ${cy+44} ${tl} ${cy} Z" fill="${c2}" ${SW}/>`;
+    else if(k === 'whaleshark') tail = `<path d="${rp([[tl,cy],[tl-tw,cy-th-6],[tl-tw+8,cy],[tl-tw,cy+th-4]])}" fill="${c1}" ${SW}/>`;
+    else if(k === 'sunfish') tail = `<path d="${rp([[tl+2,cy-ry*.55],[tl-12,cy-ry*.35],[tl-8,cy-ry*.1],[tl-14,cy+ry*.15],[tl-8,cy+ry*.4],[tl+2,cy+ry*.55]], .3)}" fill="${c2}" ${SW}/>`;
+    else if(k === 'angler') tail = `<path d="${rp([[tl,cy],[tl-tw*.7,cy-th*.7],[tl-tw*.7,cy+th*.7]])}" fill="${c1}" ${SW}/>`;
+    else tail = `<path d="${rp([[tl,cy],[tl-tw,cy-th],[tl-tw,cy+th]])}" fill="${k==='neon'?c3:c1}" ${SW}/>`;
+    // 鰭
+    if(k === 'angel') back += `<path d="${rp([[cx-8,cy-ry+3],[cx+4,cy-ry-30],[cx+18,cy-ry+4]])} ${rp([[cx-8,cy+ry-3],[cx+2,cy+ry+28],[cx+16,cy+ry-4]])}" fill="${c2}" ${SW}/>`;
+    if(k === 'betta') back += `<path d="M${cx-14} ${cy-ry+4} Q${cx-4} ${cy-ry-22} ${cx+14} ${cy-ry+3} Z" fill="${c2}" ${SW}/>`;
+    if(k === 'sunfish') back += `<path d="${rp([[cx-rx*.55,cy-ry*.8],[cx-rx*.45,cy-ry-30],[cx-rx*.15,cy-ry*.92]])} ${rp([[cx-rx*.55,cy+ry*.8],[cx-rx*.45,cy+ry+30],[cx-rx*.15,cy+ry*.92]])}" fill="${c2}" ${SW}/>`;
+    if(k === 'cory') back += `<path d="${rp([[cx-rx*.25,cy-ry+3],[cx-rx*.05,cy-ry-16],[cx+rx*.2,cy-ry+3]])}" fill="${c2}" ${SW}/>`;
+    if(k === 'goldfish' || k === 'koi' || k === 'zebra' || k === 'neon') back += `<path d="${rp([[cx-rx*.3,cy-ry+3],[cx-rx*.15,cy-ry-11],[cx+rx*.12,cy-ry+2]])}" fill="${k==='neon'?c1:c2}" ${SW} opacity=".95"/>`;
+    if(k === 'puffer'){ for(let a=0;a<14;a++){ const an = a/14*Math.PI*2; back += `<line x1="${cx+Math.cos(an)*rx}" y1="${cy+Math.sin(an)*ry}" x2="${cx+Math.cos(an)*(rx+7)}" y2="${cy+Math.sin(an)*(ry+7)}" stroke="${st}" stroke-width="2.5" stroke-linecap="round" opacity=".5"/>`; } }
+    if(k === 'angler'){
+      const hx = cx + rx*.25, hy = cy - ry;
+      back += `<path d="M${hx} ${hy+4} C${hx+4} ${hy-26} ${hx+30} ${hy-24} ${hx+30} ${hy-6}" fill="none" stroke="${st}" stroke-width="2.5" stroke-linecap="round"/>`;
+      if(!sil) back += `<circle class="lure" cx="${hx+30}" cy="${hy-2}" r="9" fill="${c2}" opacity=".35"/>`;
+      back += `<circle cx="${hx+30}" cy="${hy-2}" r="4.5" fill="${sil?st:c2}" stroke="${sil?st:'#E0B92E'}" stroke-width="1.5"/>`;
+    }
+    body = `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="${c1}" ${SW}/>`;
+    if(!sil){
+      const inside = (dy, f=.82) => rx * Math.sqrt(Math.max(0, 1 - (dy/ry)**2)) * f;
+      if(k === 'koi') deco += `<ellipse cx="${cx-rx*.25}" cy="${cy-ry*.35}" rx="${rx*.28}" ry="${ry*.32}" fill="${c2}"/><ellipse cx="${cx+rx*.2}" cy="${cy+ry*.3}" rx="${rx*.18}" ry="${ry*.22}" fill="${c2}"/>`;
+      if(k === 'whaleshark') for(let i=0;i<9;i++){ deco += `<circle cx="${cx - rx*.6 + (i%3)*rx*.35 + (i>5?6:0)}" cy="${cy - ry*.45 + Math.floor(i/3)*ry*.32}" r="2.6" fill="${c2}"/>`; }
+      if(k === 'arowana') for(let i=0;i<4;i++) deco += `<path d="M${cx-rx*.55+i*rx*.28} ${cy-ry*.5} q6 ${ry*.5} 0 ${ry}" fill="none" stroke="${c2}" stroke-width="2" opacity=".45"/>`;
+      if(k === 'guppy') deco += `<ellipse cx="${cx-rx*.3}" cy="${cy}" rx="${rx*.22}" ry="${ry*.5}" fill="${c2}" opacity=".55"/>`;
+      if(k === 'zebra') [-.42, 0, .42].forEach(f => { const dy = ry*f, hl = inside(dy, .78); deco += `<line x1="${cx-hl}" y1="${cy+dy}" x2="${cx+hl*.55}" y2="${cy+dy}" stroke="${c2}" stroke-width="${stage===3?4:3}" stroke-linecap="round" opacity=".4"/>`; });
+      if(k === 'neon'){ const dy = -ry*.18, hl = inside(dy, .8); deco += `<line x1="${cx-hl}" y1="${cy+dy}" x2="${cx+hl*.6}" y2="${cy+dy}" stroke="${c2}" stroke-width="${stage===3?6:4.5}" stroke-linecap="round" opacity=".55"/>`;
+        deco += `<path d="M${cx-rx*.85} ${cy+ry*.12} Q${cx-rx*.2} ${cy+ry*.2} ${cx+rx*.05} ${cy+ry*.12} L${cx+rx*.05} ${cy+ry*.6} Q${cx-rx*.5} ${cy+ry*.75} ${cx-rx*.85} ${cy+ry*.3}Z" fill="${c3}" opacity=".85"/>`; }
+      if(k === 'cory'){ for(let i=0;i<7;i++) deco += `<circle cx="${cx - rx*.55 + (i%4)*rx*.3}" cy="${cy - ry*.25 + Math.floor(i/4)*ry*.45}" r="2.2" fill="${c2}" opacity=".7"/>`;
+        deco += `<path d="M${cx+rx*.82} ${cy+ry*.45} q6 6 2 12 M${cx+rx*.72} ${cy+ry*.6} q4 7 -1 12" fill="none" stroke="${st}" stroke-width="2" stroke-linecap="round" opacity=".45"/>`; }
+      if(k === 'sunfish') deco += `<path d="M${cx-rx*.1} ${cy-ry*.6} q-10 ${ry*.6} 0 ${ry*1.2}" fill="none" stroke="${c2}" stroke-width="2.5" opacity=".35"/>`;
+      if(k === 'angler') deco += `<ellipse cx="${cx-rx*.1}" cy="${cy+ry*.45}" rx="${rx*.55}" ry="${ry*.3}" fill="#8C7DAE" opacity=".6"/>`;
+      if(k === 'goldfish') deco += `<ellipse cx="${cx-rx*.1}" cy="${cy+ry*.4}" rx="${rx*.5}" ry="${ry*.28}" fill="${c2}" opacity=".6"/>`;
+    }
+  }
+  let face = '';
+  if(!sil){
+    const eyes = eyeGap ? [ex-eyeGap, ex+eyeGap] : [ex];
+    if(ringEyes) face += eyes.map(x => `<circle cx="${x}" cy="${ey}" r="${(eyeR*2).toFixed(1)}" fill="#fff" stroke="${st}" stroke-width="2"/>`).join('');
+    face += `<g class="eyes" style="animation-delay:${(Math.random()*4).toFixed(2)}s">${eyes.map(x => `<circle cx="${x}" cy="${ey}" r="${eyeR}" fill="#3A2A1F"/>`).join('')}</g>`;
+    // 只有最高等級（圓滾滾）才有小笑臉
+    if(ball) face += `<path d="M${ex-4} ${ey+9} q4 4 8 0" fill="none" stroke="#3A2A1F" stroke-width="2" stroke-linecap="round"/>`;
+  }
+  if(opts.shiny) face += `<path d="M${cx+rx*.1} ${cy-ry-10} l3 7 7 3 -7 3 -3 7 -3 -7 -7 -3 7 -3z" fill="#FFF3A6" stroke="#E0B92E" stroke-width="1.2"/>`;
+  // 傳說魚：沿著本體輪廓的流動彩虹光芒（複製輪廓、加粗描邊並套上旋轉的彩虹漸層）
+  let aura = '';
+  const core = `<g class="tail">${tail}</g>${back}${body}`;
+  if(!sil && !opts.noAura){
+    aura = `<g class="aura aura-${s.rarity}">${opts.lite ? '' : `<g class="outline glow" filter="url(#aurablur)">${core}</g>`}<g class="outline rim">${core}</g></g>`;
+  }
+  return `<g class="fish">${aura}<g class="fishcore">${core}${deco}${face}</g></g>`;
+}
+// 多邊形邊角圓化：每個角從相鄰邊各削去 10% 長度，以曲線連接
+function rp(pts, f=.1){
+  const n = pts.length; let d = '';
+  for(let i=0;i<n;i++){
+    const p = pts[i], a = pts[(i-1+n)%n], b = pts[(i+1)%n];
+    const p1 = [p[0]+(a[0]-p[0])*f, p[1]+(a[1]-p[1])*f], p2 = [p[0]+(b[0]-p[0])*f, p[1]+(b[1]-p[1])*f];
+    d += `${i?'L':'M'}${p1[0].toFixed(1)} ${p1[1].toFixed(1)} Q${p[0].toFixed(1)} ${p[1].toFixed(1)} ${p2[0].toFixed(1)} ${p2[1].toFixed(1)} `;
+  }
+  return d + 'Z';
+}
+function shade(hex, amt){
+  const n = parseInt(hex.slice(1), 16); let r = n>>16, g = (n>>8)&255, b = n&255;
+  const f = v => Math.max(0, Math.min(255, Math.round(amt < 0 ? v*(1+amt) : v + (255-v)*amt)));
+  return '#' + [f(r),f(g),f(b)].map(v => v.toString(16).padStart(2,'0')).join('');
+}
+function bowlSVG(g, st, opts={}){
+  const w = opts.w || 200, mood = opts.mood || (st.hunger > 0 ? 'hungry' : 'neutral');
+  const gone = st.status === 'gone';
+  const key = (g.id || 'demo') + ':' + (opts.w || 200);
+  const rar = sp(g.species).rarity;
+  const vs = vStage(g.species, st.stage || 0), K = vs === 4 ? 1 : .66;
+  const lite = (opts.w || 200) < 160;
+  const fish = gone ? '' : `<g class="mover" data-key="${key}" data-mode="${opts.mode || 'free'}" data-rar="${rar}" data-celebrate="${opts.celebrate?1:0}" data-levelup="${opts.levelup?1:0}" data-k="${K}" data-speed="${st.hunger > 0 ? .55 : 1}" style="--wag:${st.hunger > 0 ? '1.5s' : '.9s'}" transform="translate(110,128)"><g class="flip"><g transform="scale(${K})"><g class="fishbody" transform="translate(-104,-70)">${fishSVG(g.species, vs, mood, {shiny:opts.shiny, lite})}</g></g></g></g>`;
+  const pellets = opts.pellets ? `<g class="pellet"><circle cx="150" cy="96" r="3.5" fill="#B5652B"/><circle cx="160" cy="88" r="3" fill="#B5652B"/><circle cx="142" cy="84" r="2.6" fill="#B5652B"/></g>` : '';
+  const ghost = gone ? `<g opacity=".28" transform="translate(110,128) scale(${K}) translate(-104,-70)">${fishSVG(g.species, vs, 'neutral', {silhouette:true})}</g>` : '';
+  return `<svg viewBox="0 0 220 210" width="${w}" style="max-width:100%;display:block;margin:0 auto" class="bowl" ${opts.play ? 'data-play="1"' : ''} role="img" aria-label="${esc(g.fishName||sp(g.species).name)}的魚缸">
+    <ellipse cx="110" cy="198" rx="62" ry="9" fill="#6FA0D8" opacity=".55"/>
+    <path d="M58 26 C10 52 10 168 60 188 L160 188 C210 168 210 52 162 26 Z" fill="#ffffff" opacity=".18"/>
+    <path d="M30 70 C24 110 30 150 60 186 L160 186 C190 150 196 110 190 70 Z" fill="var(--water)" opacity=".92"/>
+    <path d="M30 70 L190 70" stroke="#A9B3F0" stroke-width="3"/>
+    <path class="sway" d="M64 182 C58 164 70 154 62 136 C58 126 66 118 64 110" fill="none" stroke="#6CC6A0" stroke-width="5" stroke-linecap="round" opacity=".85"/>
+    <path class="sway" style="animation-delay:-1.4s" d="M74 182 C78 168 70 160 76 148" fill="none" stroke="#5BB28F" stroke-width="4" stroke-linecap="round" opacity=".8"/>
+    <path class="sway" style="animation-delay:-.7s" d="M158 182 C164 166 152 156 160 140 C164 132 158 126 160 120" fill="none" stroke="#6CC6A0" stroke-width="4.5" stroke-linecap="round" opacity=".8"/>
+    <g opacity=".75"><path d="M78 178 l10 -14 8 14z M98 180 l7 -12 9 12z M118 178 l12 -16 6 16z M138 180 l8 -10 8 10z M86 182 l14 -8 2 8z" fill="#E7E5F7"/></g>
+    ${ghost}${fish}${pellets}<g class="fx"></g>
+    <path d="M58 26 C10 52 10 168 60 188 L160 188 C210 168 210 52 162 26" fill="none" stroke="var(--glass)" stroke-width="7" stroke-linejoin="round"/>
+    <ellipse cx="110" cy="26" rx="54" ry="11" fill="none" stroke="var(--glass)" stroke-width="7"/>
+    <path d="M44 84 C40 104 42 126 50 144" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" opacity=".5"/>
+  </svg>`;
+}
+// ---------- 畫面 ----------
+function render(){
+  const app = document.getElementById('app');
+  if(!S.ready){ app.innerHTML = `<header><h1>養魚目標</h1></header><main><div class="empty"><p>正在把魚缸搬出來…</p></div></main>`; return; }
+  let html = '';
+  if(S.view === 'home') html = vHome();
+  else if(S.view === 'wizard') html = vWizard();
+  else if(S.view === 'login') html = vLogin();
+  else if(S.view === 'tank') html = vTank();
+  else if(S.view === 'feed') html = vFeed();
+  else if(S.view === 'reviewing') html = vReviewing();
+  else if(S.view === 'result') html = vResult();
+  else if(S.view === 'dex') html = vDex();
+  else if(S.view === 'memories') html = vMemories();
+  else if(S.view === 'memory') html = vMemory();
+  const tabs = ['home','dex','memories'].includes(S.view) ? `<nav class="tabs">
+    <button data-act="tab" data-v="home" class="${S.view==='home'?'on':''}"><b>🫧</b>魚缸</button>
+    <button data-act="tab" data-v="dex" class="${S.view==='dex'?'on':''}"><b>📖</b>圖鑑</button>
+    <button data-act="tab" data-v="memories" class="${S.view==='memories'?'on':''}"><b>🐚</b>回憶</button></nav>` : '';
+  app.className = 'v-' + S.view;
+  app.innerHTML = html + tabs + (S.modal ? vModal() : '') + (S.dexInfo ? vDexInfo() : '');
+  window.scrollTo && S._scrollTop && window.scrollTo(0,0); S._scrollTop = false;
+}
+function go(v, extra={}){ Object.assign(S, extra); S.view = v; S._scrollTop = true; render(); }
+
+function storeBanner(){
+  const parts = [];
+  if(DEMO) parts.push('示範模式：尚未設定後台，資料只存在這個瀏覽器，審核為簡易判斷');
+  if(S.loadErr) parts.push(S.loadErr);
+  return parts.length ? `<div class="banner">ℹ️ ${parts.join('；')}</div>` : '';
+}
+function vHome(){
+  const active = S.goals.filter(g => (g.status||'active') === 'active');
+  const cards = active.map(g => {
+    const st = stateOf(g);
+    const nextTxt = st.open >= 0 ? `可以餵了・${fmt(st.openDeadline)} 前` : st.next ? `下次 ${fmt(st.next)}` : '—';
+    const dots = st.marks.slice(-10).map(m => `<i class="${m}"></i>`).join('');
+    return `<div class="tankcard" data-act="open" data-id="${g.id}">
+      ${st.hunger > 0 ? `<span class="hungry">餓了 ${st.hunger} 次</span>` : ''}
+      ${bowlSVG(g, st, {w:150})}
+      <div class="name">${esc(g.title)}</div>
+      <div class="meta"><span class="rar ${sp(g.species).rarity}">${RARITY[sp(g.species).rarity].label}</span> ${esc(g.fishName || sp(g.species).name)}</div>
+      <div class="meta">${nextTxt}</div>
+      <div class="dots">${dots}</div></div>`;
+  }).join('');
+  return `<header><h1>我的魚缸</h1>${DEMO ? '' : '<button class="iconbtn" data-act="account" aria-label="帳號">👤</button>'}<button class="iconbtn primary" data-act="new">＋ 新目標</button></header>
+  <main>${storeBanner()}
+  ${active.length ? `<div class="grid">${cards}</div>` : `<div class="empty">
+    ${bowlSVG({species:'goldfish'}, {stage:0,hunger:0,status:'active'}, {w:170})}
+    <h3>魚缸還是空的</h3><p>每個目標都是一條魚。<br>用進度證明當飼料，審核通過才算餵成功。</p>
+    <button class="btn" data-act="new">放第一條魚</button>
+    ${DEMO ? '<button class="btn ghost" data-act="seed">先放兩條範例魚看看</button>' : ''}</div>`}
+  ${DEMO ? `<div class="devtools">預覽工具：模擬時間 ${S.timeShift ? `+${Math.round(S.timeShift/D)} 天` : '現在'}<br>
+    <button data-act="shift" data-v="1">⏩ 快轉 1 天</button><button data-act="shift" data-v="0">↺ 回到現在</button>
+    ${active.length ? '<button data-act="seed">＋ 範例魚</button>' : ''}</div>` : ''}
+  </main>`;
+}
+
+// --- 登入
+function vLogin(){
+  const L = S.login || (S.login = {mode:'in', email:'', err:'', msg:''});
+  return `<header><h1>養魚目標</h1></header><main>
+    <div class="empty">${bowlSVG({id:'login', species:'goldfish'}, {stage:1,hunger:0,status:'active'}, {w:190})}
+      <h3>${L.mode === 'in' ? '歡迎回來' : '建立帳號'}</h3><p>每個目標都是一條魚。<br>用進度證明當飼料，審核通過才算餵成功。</p></div>
+    <form class="panel" id="loginform">
+      <label class="f">Email</label><input type="email" id="l-email" autocomplete="email" value="${esc(L.email)}" required>
+      <label class="f">密碼</label><input type="password" id="l-pass" autocomplete="${L.mode==='in'?'current-password':'new-password'}" minlength="6" required>
+      ${L.err ? `<div class="err">${esc(L.err)}</div>` : ''}${L.msg ? `<div class="hint">${esc(L.msg)}</div>` : ''}
+      <button class="btn" type="submit" ${S.busy?'disabled':''}>${L.mode === 'in' ? '登入' : '註冊'}</button>
+      <button class="btn ghost" type="button" data-act="loginmode">${L.mode === 'in' ? '還沒有帳號？註冊' : '已經有帳號？登入'}</button>
+    </form></main>`;
+}
+document.addEventListener('submit', async e => {
+  if(e.target.id !== 'loginform') return;
+  e.preventDefault();
+  const L = S.login; L.email = document.getElementById('l-email').value.trim(); const pw = document.getElementById('l-pass').value;
+  L.err = ''; L.msg = ''; S.busy = true; render();
+  try {
+    if(L.mode === 'in'){
+      const {error} = await sb.auth.signInWithPassword({email:L.email, password:pw}); if(error) throw error;
+    } else {
+      const {data, error} = await sb.auth.signUp({email:L.email, password:pw}); if(error) throw error;
+      if(!data.session){ L.mode = 'in'; L.msg = '註冊成功！請到信箱點確認連結，再回來登入。'; }
+    }
+  } catch(err){ L.err = ({'Invalid login credentials':'Email 或密碼不正確。','User already registered':'這個 Email 已經註冊過了，請直接登入。'})[err.message] || ('發生錯誤：' + err.message); }
+  S.busy = false; if(S.view === 'login') render();
+});
+
+// --- 建立目標精靈
+function newWizard(){
+  const t = TYPES.short; const start = now();
+  return {step:1, type:'short', title:'', why:'', criteria:'', species:'goldfish', fishName:'', freq:t.freq, days:[2,5], every:14, time:'21:00',
+          start, end: start + t.days*D, err:''};
+}
+function vWizard(){
+  const w = S.wiz; const steps = [1,2,3,4].map(i => `<i class="${i<=w.step?'on':''}"></i>`).join('');
+  let body = '';
+  if(w.step === 1){
+    body = `<div class="panel"><h3>這是哪一種目標？</h3><div class="seg">${Object.entries(TYPES).map(([k,t]) =>
+      `<button data-act="wtype" data-v="${k}" class="${w.type===k?'on':''}">${t.label}<small>${t.hint}</small></button>`).join('')}</div>
+      <p class="hint">類型會決定預設的餵食頻率、任務長度，以及可以錯過幾次。<br>
+      短期：每天餵、可錯過 2 次｜中期：每週餵、可錯過 3 次｜長期：每兩週餵、可錯過 3 次</p></div>`;
+  } else if(w.step === 2){
+    body = `<div class="panel"><h3>你的目標</h3>
+      <label class="f">目標名稱</label><input type="text" id="w-title" value="${esc(w.title)}" placeholder="例：國考前讀完生化講義">
+      <label class="f">為什麼想達成？</label><input type="text" id="w-why" value="${esc(w.why)}" placeholder="寫給未來回顧時的自己">
+      <label class="f">怎樣算一次合格的餵食？</label><textarea id="w-crit" placeholder="例：每次讀完 1 章，附上筆記照片（看得到章節標題）">${esc(w.criteria)}</textarea>
+      <p class="hint">審核時會以這一欄為標準，寫得越具體越好。</p></div>`;
+  } else if(w.step === 3){
+    body = `<div class="panel"><h3>選一條魚</h3>${rarityTabs()}<div class="species">${shownSpecies().map(s => {
+        const ok = unlocked(s.rarity);
+        return `<div class="sp r-${s.rarity} ${w.species===s.id?'on':''} ${ok?'':'locked'}" data-act="${ok?'wsp':''}" data-v="${s.id}">
+          <svg viewBox="0 0 200 140" width="100%">${fishSVG(s, 1, 'happy', {silhouette:!ok})}</svg>
+          <div class="n">${ok ? s.name : '？？？'} <span class="rar ${s.rarity}">${RARITY[s.rarity].label}</span></div>
+          <div class="d">${ok ? `可錯過 ${Math.max(1, TYPES[w.type].miss - RARITY[s.rarity].penalty)} 次` : '🔒 '+unlockText[s.rarity]}</div></div>`; }).join('')}</div>
+      ${DEMO ? '' : '<!--'}<label class="toggle"><input type="checkbox" data-act="unlockall" ${S.unlockAll?'checked':''}> 預覽用：全部解鎖</label>${DEMO ? '' : '-->'}
+      <label class="f">幫牠取個名字（可不填）</label><input type="text" id="w-fname" value="${esc(w.fishName)}" placeholder="${esc(sp(w.species).name)}">
+      <p class="hint">越稀有的魚越難養：可錯過次數更少，審核也更嚴格。</p></div>`;
+  } else {
+    const g = wizToGoal(); const n = slotsOf(g).length;
+    body = `<div class="panel"><h3>餵食節奏</h3>
+      <div class="seg">${[['daily','每天'],['weekly','每週'],['interval','每 N 天']].map(([k,l]) => `<button data-act="wfreq" data-v="${k}" class="${w.freq===k?'on':''}">${l}</button>`).join('')}</div>
+      ${w.freq==='weekly' ? `<label class="f">哪幾天</label><div class="days">${WD.map((d,i) => `<button data-act="wday" data-v="${i}" class="${w.days.includes(i)?'on':''}">${d}</button>`).join('')}</div>` : ''}
+      ${w.freq==='interval' ? `<label class="f">每幾天一次</label><select id="w-every">${[2,3,5,7,10,14,21,30].map(v => `<option ${w.every==v?'selected':''}>${v}</option>`).join('')}</select>` : ''}
+      <label class="f">餵食時間</label><input type="time" id="w-time" value="${w.time}">
+      <label class="f">任務結束日</label><input type="date" id="w-end" value="${dateInput(w.end)}" min="${dateInput(w.start)}">
+      <div class="panel" style="background:#F3F6FC;margin-top:14px;text-align:center">
+        <svg viewBox="0 0 200 140" width="120">${fishSVG(w.species, 0, 'happy')}</svg>
+        <div>預計餵食 <b>${n}</b> 次・可錯過 <b>${allowedMiss(g)}</b> 次</div>
+        <div class="hint">通過率達 70% 就能畢業</div></div></div>`;
+  }
+  const canNext = w.step !== 2 || (w.title.trim() && w.criteria.trim());
+  return `<header><button class="iconbtn" data-act="${w.step>1?'wback':'home'}">←</button><h1>新目標 ${w.step}/4</h1></header>
+  <main><div class="steps">${steps}</div>${body}
+  ${w.err ? `<div class="err">${esc(w.err)}</div>` : ''}
+  ${w.step < 4 ? `<button class="btn" data-act="wnext">下一步</button>` : `<button class="btn orange" data-act="wdone">🐟 放魚入缸</button>`}
+  </main>`;
+}
+function wizToGoal(){ const w = S.wiz; return {type:w.type, species:w.species, freq:w.freq, days:w.days, every:w.every, time:w.time, start:w.start, end:w.end}; }
+function readWizInputs(){
+  const w = S.wiz; const v = id => { const el = document.getElementById(id); return el ? el.value : null; };
+  if(v('w-title') !== null) w.title = v('w-title');
+  if(v('w-why') !== null) w.why = v('w-why');
+  if(v('w-crit') !== null) w.criteria = v('w-crit');
+  if(v('w-fname') !== null) w.fishName = v('w-fname');
+  if(v('w-time') !== null) w.time = v('w-time') || '21:00';
+  if(v('w-every') !== null) w.every = Number(v('w-every'));
+  if(v('w-end')){ const [y,m,d] = v('w-end').split('-').map(Number); w.end = new Date(y, m-1, d, 12).getTime(); }
+}
+
+// --- 單一魚缸
+function vTank(){
+  const g = S.goals.find(x => x.id === S.cur); if(!g) return vHome();
+  const st = stateOf(g); const s = sp(g.species);
+  const feedsDesc = [...st.feeds].reverse();
+  const canFeed = st.open >= 0 && st.status === 'active';
+  return `<header><button class="iconbtn" data-act="home">←</button><h1 style="font-size:18px">${esc(g.title)}</h1><span class="rar ${s.rarity}">${RARITY[s.rarity].label}</span></header>
+  <main>
+    <div class="big">${bowlSVG(g, st, {w:290, play:true})}</div><div class="hint" style="text-align:center;margin:-2px 0 0">點魚缸讓牠游過去・點魚會冒愛心</div>
+    <div class="panel">
+      <div style="display:flex;justify-content:space-between;align-items:baseline"><b>${esc(g.fishName || s.name)}</b><span class="hint" style="margin:0">${TYPES[g.type].label}目標・${fmtD(g.start)} – ${fmtD(g.end)}</span></div>
+      <div class="statrow"><span class="k">成長</span><div class="bar"><span style="width:${Math.round(st.growth*100)}%;background:var(--pass)"></span></div><span class="v">${stageName(g.species, st.stage)} ${st.pass}/${st.total}</span></div>
+      <div class="statrow"><span class="k">飽足</span><div class="bar"><span style="width:${Math.max(6, 100 - st.hunger/(st.allowed+1)*100)}%;background:${st.hunger?'var(--warn)':'#7BC4A4'}"></span></div><span class="v">錯過 ${st.missed}/${st.allowed}</span></div>
+      <div class="hint">${canFeed ? `🍤 這一餐請在 <b>${fmt(st.openDeadline)}</b> 前餵` : st.next ? `下次餵食：${fmt(st.next)}` : '沒有待餵的時段了'}</div>
+      <div class="hint">合格標準：${esc(g.criteria)}</div>
+      <button class="btn orange" data-act="feed" ${canFeed?'':'disabled'}>🍤 餵魚（上傳證明）</button>
+    </div>
+    <div class="panel"><h3>餵食紀錄</h3>${feedsDesc.length ? `<ul class="hist">${feedsDesc.map(histItem).join('')}</ul>` : '<p class="hint">還沒餵過。</p>'}</div>
+    <button class="btn ghost" data-act="askdelete">放生這條魚（刪除目標）</button>
+  </main>`;
+}
+function histItem(f){
+  const icon = {pass:'✅', needs_more:'⚠️', fail:'❌'}[f.verdict] || '•';
+  return `<li><span class="st">${icon}</span><div class="tx"><div class="when">${fmt(f.ts)}${f.appealed?'・已申訴':''}${f.demo?'・示範審核':''}</div>
+    <div>${esc(f.text)}</div><div class="rs">${esc(f.reason)}</div>
+    ${f.thumbs && f.thumbs.length ? `<div class="thumbs">${f.thumbs.map(t => `<img src="${t}" alt="證明照片">`).join('')}</div>` : ''}</div></li>`;
+}
+
+// --- 餵魚
+function vFeed(){
+  const g = S.goals.find(x => x.id === S.cur); const st = stateOf(g); const d = S.feedDraft;
+  return `<header><button class="iconbtn" data-act="back-tank">←</button><h1>餵魚</h1></header>
+  <main>
+    <div class="panel"><h3>這次的進度是什麼？</h3>
+      <div class="hint" style="margin-top:0">標準：${esc(g.criteria)}</div>
+      <textarea id="f-text" placeholder="例：讀完第 3 章膜運輸，整理了主動運輸 vs 被動運輸的比較表">${esc(d.text)}</textarea>
+      <label class="f">附上證明（照片、截圖）</label>
+      <label class="drop"><input type="file" id="f-file" accept="image/*" multiple>📷 點這裡選擇圖片（最多 3 張）</label>
+      ${d.thumbs.length ? `<div class="thumbs">${d.thumbs.map((t,i) => `<img src="${t}" alt="已選圖片 ${i+1}">`).join('')}</div>` : ''}
+      ${d.err ? `<div class="err">${esc(d.err)}</div>` : ''}
+      <button class="btn orange" data-act="submit" ${S.busy?'disabled':''}>${AI || DEMO ? '送出審核' : '🍤 餵食'}</button>
+      <p class="hint">${AI || DEMO ? '審核會看：和目標相關嗎？夠具體嗎？是這次的進度嗎？有沒有重複使用舊照片？' : '說明和照片會存進這條魚的紀錄，之後回顧時都看得到。同一張照片不能重複使用。'}</p>
+    </div>
+    <div class="big" style="margin-top:8px">${bowlSVG(g, st, {w:180})}</div>
+  </main>`;
+}
+function vReviewing(){
+  const g = S.goals.find(x => x.id === S.cur); const st = stateOf(g);
+  return `<header><h1>${AI || S.sample || DEMO ? '審核中…' : '餵食中…'}</h1></header><main style="text-align:center">
+    <div class="big">${bowlSVG(g, st, {w:270, mode:'food'})}</div>
+    <div class="panel"><b>${esc(g.fishName || sp(g.species).name)}正在聞飼料…</b><p class="hint">${AI || S.sample ? 'Claude 正在看你的證明' : sb ? '正在把飼料放進魚缸' : '示範審核中'}，大約 5–15 秒。</p></div></main>`;
+}
+function vResult(){
+  const r = S.lastResult; const g = S.goals.find(x => x.id === S.cur); const st = stateOf(g); const s = sp(g.species);
+  const map = {pass:['✅ 通過！', `${esc(g.fishName||s.name)}吃飽了`, 'var(--pass)'], needs_more:['⚠️ 需要補件', '在期限內補上就不算錯過', 'var(--warn)'], fail:['❌ 這次沒通過', '可以申訴一次，或重新上傳', 'var(--fail)']};
+  const [h, sub, col] = map[r.verdict] || map.fail;
+  const title = r.selfCheck ? '🍤 餵食成功！' : h;
+  const grew = r.verdict === 'pass' && r.stageBefore !== st.stage;
+  return `<header><h1>審核結果</h1></header><main><div class="result">
+    <div class="big ${r.verdict==='pass'?'grow':''}">${bowlSVG(g, st, {w:270, mood:r.verdict==='pass'?'happy':(r.verdict==='fail'?'hungry':'neutral'), pellets:r.verdict==='pass', mode:r.verdict==='pass'?'food':'free', celebrate:r.verdict==='pass', levelup:grew, play:true, shiny:r.verdict==='pass' && r.score>=95})}</div>
+    <h2 style="color:${col}">${title}</h2><div class="hint" style="margin-top:0">${sub}${grew ? `・升級為「${stageName(g.species, st.stage)}」！` : ''}</div>
+    ${r.verdict==='pass' ? `<div class="hint">「${esc(s.line)}」</div>` : ''}
+    <div class="reason">${esc(r.reason)}${r.missing ? `<br><b>缺少：</b>${esc(r.missing)}` : ''}</div>
+    <div class="tag">${r.selfCheck ? '自主紀錄（未經 AI 審核）' : r.demo ? '示範審核（未連上 Claude）' : `Claude 審核・分數 ${r.score ?? '—'}`}${r.appealed?'・申訴重審':''}</div>
+    ${r.verdict==='needs_more' ? `<button class="btn orange" data-act="feed">補件</button>` : ''}
+    ${r.verdict==='fail' && !r.appealed && (AI || S.sample) ? `<button class="btn ghost" data-act="appeal">申訴（用更強的模型重審）</button>` : ''}
+    ${r.verdict==='fail' ? `<button class="btn ghost" data-act="feed">重新上傳</button>` : ''}
+    <button class="btn" data-act="back-tank">回到魚缸</button></div></main>`;
+}
+
+// --- 圖鑑
+function vDex(){
+  const raised = id => S.goals.filter(g => g.species === id && g.status === 'graduated').length;
+  const got = SPECIES.filter(s => raised(s.id)).length;
+  return `<header><h1>魚種圖鑑</h1><span class="iconbtn" style="cursor:default">已養成 ${got}/${SPECIES.length}</span></header><main>
+  ${rarityTabs()}<div class="species">${shownSpecies().map(s => { const ok = unlocked(s.rarity); const n = raised(s.id);
+    return `<div class="sp r-${s.rarity} ${ok?'':'locked'}" data-act="dexinfo" data-v="${s.id}" style="cursor:pointer"><svg viewBox="0 0 200 140" width="100%"><g class="bob">${fishSVG(s, n?4:1, 'happy', {silhouette:!ok})}</g></svg>
+      <div class="n">${ok ? s.name : '？？？'} <span class="rar ${s.rarity}">${RARITY[s.rarity].label}</span></div>
+      <div class="d">${ok ? (n ? `已養成 ${n} 條` : '尚未養成') : '🔒 '+unlockText[s.rarity]}</div></div>`; }).join('')}</div>
+  ${DEMO ? '' : '<!--'}<label class="toggle"><input type="checkbox" data-act="unlockall" ${S.unlockAll?'checked':''}> 預覽用：全部解鎖</label>${DEMO ? '' : '-->'}
+  </main>`;
+}
+
+// --- 回憶水族館
+function vMemories(){
+  const ended = S.goals.filter(g => g.status && g.status !== 'active').sort((a,b) => (b.endedAt||0) - (a.endedAt||0));
+  const label = {graduated:'🎓 畢業', barely:'勉強過關', gone:'🌊 游走了'};
+  return `<header><h1>回憶水族館</h1></header><main>
+  ${ended.length ? `<div class="memgrid">${ended.map(g => { const st = stateOf(g); return `<div class="tankcard" data-act="mem" data-id="${g.id}">
+    ${bowlSVG(g, st, {w:110, mood:g.status==='graduated'?'happy':'neutral'})}
+    <div class="name">${esc(g.title)}</div><div class="meta">${label[g.status]}</div></div>`; }).join('')}</div>`
+   : `<div class="empty"><h3>還沒有回憶</h3><p>目標結束後，魚會帶著所有證明和審核紀錄住進這裡。<br>點一條魚就能回顧當時的一切。</p></div>`}
+  </main>`;
+}
+function vMemory(){
+  const g = S.goals.find(x => x.id === S.cur); if(!g) return vMemories();
+  const st = stateOf(g); const s = sp(g.species);
+  const label = {graduated:'🎓 畢業', barely:'勉強過關', gone:'🌊 游走了'}[g.status];
+  const rate = Math.round(st.pass / st.total * 100);
+  let best = 0, run = 0; st.marks.forEach(m => { if(m==='p'){ run++; best = Math.max(best, run); } else if(m==='m') run = 0; });
+  return `<header><button class="iconbtn" data-act="tab" data-v="memories">←</button><h1 style="font-size:18px">${esc(g.fishName || s.name)}的一生</h1></header>
+  <main>
+    <div class="big">${bowlSVG(g, st, {w:240, mood:g.status==='graduated'?'happy':'neutral'})}</div>
+    <div class="panel"><b>${esc(g.title)}</b> <span class="rar ${s.rarity}">${RARITY[s.rarity].label}・${s.name}</span>
+      <div class="hint">${TYPES[g.type].label}目標・${fmtD(g.start)} – ${fmtD(g.end)}・${label}</div>
+      <div class="hint">通過率 <b>${rate}%</b>（${st.pass}/${st.total}）・最長連續 <b>${best}</b> 次・錯過 ${st.missed} 次</div>
+      ${g.why ? `<div class="hint">當初的動機：${esc(g.why)}</div>` : ''}</div>
+    <div class="panel"><h3>這條魚的一生</h3>
+      ${g.recap ? `<div class="recap">${esc(g.recap)}</div>` : `<p class="hint">還沒寫下總結。</p><button class="btn" data-act="recap" ${S.busy?'disabled':''}>${S.busy?'撰寫中…':(AI || S.sample ? '請 Claude 寫下這條魚的一生' : '寫下這條魚的一生')}</button>`}
+      <label class="f">給未來自己的話</label><textarea id="m-note" placeholder="這段期間學到什麼？下次想怎麼做？">${esc(g.note||'')}</textarea>
+      <button class="btn ghost" data-act="savenote">儲存</button></div>
+    <div class="panel"><h3>時間軸</h3>${st.feeds.length ? `<ul class="hist">${st.feeds.map(histItem).join('')}</ul>` : '<p class="hint">沒有餵食紀錄。</p>'}</div>
+  </main>`;
+}
+function dexBowl(s, i){ return bowlSVG({id:'dex-'+s.id, species:s.id}, {stage:i, hunger:0, status:'active'}, {w:230, play:true}); }
+let dexTimer = null;
+function setDexStage(i, fancy){
+  const s = sp(S.dexInfo); if(!s) return;
+  const prev = S.dexStage || 0; S.dexStage = i;
+  const box = document.getElementById('dexbig'); if(!box) return;
+  box.innerHTML = dexBowl(s, i);
+  box.classList.remove('grow'); void box.offsetWidth; box.classList.add('grow');
+  document.querySelectorAll('.evo-i').forEach((b, k) => b.classList.toggle('on', k === i));
+  if(fancy && i > prev){ const svg = box.querySelector('svg'); setTimeout(() => burst(svg, 110, 120, 'sparkle', 14, 52), 120); }
+}
+function startDexAuto(){
+  clearInterval(dexTimer); S.dexAuto = true;
+  dexTimer = setInterval(() => {
+    if(!S.dexInfo || !S.dexAuto){ clearInterval(dexTimer); return; }
+    const n = stageCount(S.dexInfo); setDexStage(((S.dexStage||0) + 1) % n, true);
+  }, 2400);
+}
+function vDexInfo(){
+  const s = sp(S.dexInfo); const ok = unlocked(s.rarity); const r = RARITY[s.rarity];
+  const raised = S.goals.filter(g => g.species === s.id && g.status === 'graduated').length;
+  const raising = S.goals.filter(g => g.species === s.id && (g.status||'active') === 'active').length;
+  const miss = Object.entries(TYPES).map(([k,t]) => `${t.label} ${Math.max(1, t.miss - r.penalty)} 次`).join('・');
+  const idx = SPECIES.indexOf(s) + 1;
+  return `<div class="modal" data-act="closedex"><div class="sheet dexsheet r-${s.rarity}" data-stop="1">
+    <div style="display:flex;align-items:center;gap:8px"><span class="hint" style="margin:0">No.${String(idx).padStart(3,'0')}</span>
+      <h3 style="margin:0;flex:1;font-size:20px">${ok ? esc(s.name) : '？？？'}</h3><span class="rar ${s.rarity}">${r.label}</span></div>
+    ${ok ? `<div id="dexbig" class="big">${dexBowl(s, S.dexStage || 0)}</div>
+      <div class="evo">${STAGE_NAMES[stageCount(s.id)].map((nm,i) => `<button class="evo-i ${i===(S.dexStage||0)?'on':''}" data-act="dexstage" data-v="${i}">${bowlSVG({id:'dexm-'+s.id+'-'+i, species:s.id}, {stage:i, hunger:0, status:'active'}, {w:84})}<span>${i+1}. ${nm}</span></button>`).join('<b class="arr">›</b>')}</div>
+      <div style="text-align:center"><button class="iconbtn" data-act="dexreplay" style="font-size:13px;margin-top:6px">${S.dexAuto ? '⏸ 暫停進化動畫' : '▶ 播放進化動畫'}</button></div>`
+         : `<svg viewBox="0 0 200 140" width="200" style="display:block;margin:10px auto">${fishSVG(s, 1, 'neutral', {silhouette:true})}</svg>`}
+    ${ok ? `<p class="dexdesc">${esc(DESC[s.id] || '')}</p>
+      <div class="quote">「${esc(s.line)}」</div>
+      <div class="dexstats"><div><b>${raised}</b><span>已養成</span></div><div><b>${raising}</b><span>養育中</span></div><div><b>${r.minScore}</b><span>審核及格分</span></div></div>
+      <div class="hint">可錯過餵食：${miss}</div>
+      <div class="hint">點上面的階段可以單獨查看，點魚缸讓牠游過去。</div>`
+      : `<p class="dexdesc">還沒解鎖這種魚。<br>🔒 ${unlockText[s.rarity]}，就能看到牠的介紹。</p>`}
+    <button class="btn" data-act="closedex">關閉</button></div></div>`;
+}
+function vModal(){
+  const m = S.modal;
+  return `<div class="modal" data-act="closemodal"><div class="sheet" data-stop="1"><h3 style="margin-top:0">${esc(m.title)}</h3><p class="hint">${esc(m.body)}</p>
+    <button class="btn" style="background:var(--fail)" data-act="${m.ok}">${esc(m.okLabel)}</button><button class="btn ghost" data-act="closemodal">取消</button></div></div>`;
+}
+
+// ---------- 圖片處理 ----------
+function loadImg(file){ return new Promise((res, rej) => { const url = URL.createObjectURL(file); const im = new Image(); im.onload = () => res(im); im.onerror = rej; im.src = url; }); }
+function toCanvas(im, max){ const r = Math.min(1, max / Math.max(im.width, im.height)); const c = document.createElement('canvas'); c.width = Math.round(im.width*r); c.height = Math.round(im.height*r); c.getContext('2d').drawImage(im, 0, 0, c.width, c.height); return c; }
+function hashStr(s){ let h = 2166136261; for(let i=0;i<s.length;i+=7){ h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return (h>>>0).toString(16); }
+function tinyHash(im){ const c = toCanvas(im, 16); const d = c.getContext('2d').getImageData(0,0,c.width,c.height).data; let avg = 0; const g = []; for(let i=0;i<d.length;i+=4){ const v = (d[i]+d[i+1]+d[i+2])/3; g.push(v); avg += v; } avg /= g.length; return hashStr(g.map(v => v > avg ? '1':'0').join('') + c.width + 'x' + c.height); }
+
+// ---------- 審核 ----------
+function blobToB64(b){ return new Promise((res, rej) => { const r = new FileReader(); r.onload = () => res(String(r.result).split(',')[1]); r.onerror = rej; r.readAsDataURL(b); }); }
+async function invokeFn(name, body){
+  const {data, error} = await sb.functions.invoke(name, {body});
+  if(error){
+    let msg = error.message;
+    try { const j = await error.context.json(); if(j && j.error) msg = j.error; } catch(_){}
+    throw new Error(msg);
+  }
+  return data;
+}
+// 未啟用 AI 審核：上傳證明就算餵食成功，照片原檔存進私人空間
+async function recordFeed(g, st, d){
+  const id = (crypto.randomUUID && crypto.randomUUID()) || uid();
+  const paths = [];
+  for(let i=0;i<d.blobs.length;i++){
+    const path = `${S.user.id}/${id}/${i}.jpg`;
+    const {error} = await sb.storage.from('proofs').upload(path, d.blobs[i], {contentType:'image/jpeg', upsert:true});
+    if(error) throw new Error('照片上傳失敗：' + error.message);
+    paths.push(path);
+  }
+  const t = (d.text || '').trim();
+  const feed = {id, goalId:g.id, slot:st.open, ts:Date.now(), text:d.text, thumbs:d.thumbs, hashes:d.hashes, images:paths,
+    verdict:'pass', score:null, reason:'已記錄這次的進度，魚吃到飼料了！', missing:'', summary:t.slice(0,60) || '上傳了一張進度照片', selfCheck:true, appealed:false};
+  await S.store.save('feeds', feed);
+  return feed;
+}
+async function reviewServer(g, st, draft, appeal){
+  const images = await Promise.all(draft.blobs.map(blobToB64));
+  const out = await invokeFn('review-proof', {goalId:g.id, slot:st.open, slotTime:st.slots[st.open], deadline:st.openDeadline, now:Date.now(),
+    text:draft.text, images, thumbs:draft.thumbs, hashes:draft.hashes, appealFeedId: appeal ? draft.lastFeedId : null});
+  return out.feed;
+}
+async function review(g, st, draft, appeal){
+  const s = sp(g.species); const rar = RARITY[s.rarity];
+  const prev = st.feeds.filter(f => f.verdict === 'pass').slice(-3).map(f => `- ${fmt(f.ts)}：${f.summary || f.text}`).join('\n') || '（無）';
+  const prompt = `你是「養魚目標 App」的審核員。使用者每完成一次進度就上傳證明，通過審核才算「餵魚成功」。請公正、具體地判斷，語氣溫和但不放水。
+${appeal ? '這是使用者的申訴重審：請重新仔細檢視所有證據，不要受前一次結果影響。\n' : ''}
+【目標】${g.title}
+【當初的動機】${g.why || '（未填）'}
+【合格餵食標準】${g.criteria}
+【本次餵食時段】${fmt(st.slots[st.open])}，期限 ${fmt(st.openDeadline)}；現在時間 ${fmt(now())}
+【魚種稀有度】${rar.label}（越稀有，對具體性要求越嚴；建議及格分數 ${rar.minScore}）
+【最近通過的進度】
+${prev}
+【使用者這次的說明】${draft.text || '（未填）'}
+【附件】${draft.blobs.length} 張圖片（如有，已附上）
+
+審核四大標準：1. 相關性：證明和這個目標有關嗎？ 2. 具體性：看得出做了什麼、做了多少嗎？ 3. 新鮮度：像是這個時段內的新進度嗎（不是重複上次的內容）？ 4. 是否符合「合格餵食標準」。
+判定：pass（達標）、needs_more（方向對但證據不足，說明缺什麼）、fail（無關或明顯不達標）。
+只回傳 JSON，不要其他文字：
+{"verdict":"pass|needs_more|fail","score":0到100的整數,"reason":"給使用者看的一到兩句繁體中文說明","missing":"若 needs_more，具體缺什麼；否則空字串","summary":"用一句繁體中文總結這次的進度，會存入回顧"}`;
+  const opts = {modelTier: appeal ? 'complex' : 'default'};
+  if(draft.blobs.length){
+    try { const lim = await S.sample.limits(); if(lim && lim.images) opts.images = draft.blobs; } catch(e){}
+  }
+  const out = await S.sample.json(prompt, opts);
+  const v = ['pass','needs_more','fail'].includes(out && out.verdict) ? out.verdict : 'needs_more';
+  return {verdict:v, score: Number(out.score) || null, reason: String(out.reason || ''), missing: String(out.missing || ''), summary: String(out.summary || draft.text || '')};
+}
+function demoReview(draft){
+  const t = (draft.text||'').trim();
+  if(t.length >= 10 && draft.blobs.length) return {verdict:'pass', score:80, reason:'說明具體，也附上了照片（示範模式的簡易判斷）。', missing:'', summary:t.slice(0,60)};
+  if(t.length >= 10) return {verdict:'needs_more', score:55, reason:'說明有寫，但沒有附上可以佐證的照片或截圖。', missing:'一張能看出進度的照片或截圖', summary:t.slice(0,60)};
+  return {verdict:'fail', score:20, reason:'說明太短，看不出這次完成了什麼。', missing:'', summary:t};
+}
+async function doSubmit(appeal){
+  const g = S.goals.find(x => x.id === S.cur); const st = stateOf(g); const d = S.feedDraft;
+  if(!appeal){
+    const el = document.getElementById('f-text'); if(el) d.text = el.value;
+    if(!d.text.trim() && !d.blobs.length){ d.err = '寫一句進度或附一張圖片吧。'; render(); return; }
+    const usedHashes = new Set(S.feeds.flatMap(f => f.hashes || []));
+    if(d.hashes.some(h => usedHashes.has(h))){ d.err = '這張圖片之前已經餵過了，請上傳這次的新證明。'; render(); return; }
+  }
+  if(st.open < 0){ d.err = '目前不在餵食時段內。'; render(); return; }
+  S.busy = true; const stageBefore = st.stage; go('reviewing');
+  let r, demo = false, serverFeed = null;
+  try {
+    if(AI){ serverFeed = await reviewServer(g, st, d, appeal); r = serverFeed; }
+    else if(sb){ serverFeed = await recordFeed(g, st, d); r = serverFeed; }
+    else if(S.sample) r = await review(g, st, d, appeal);
+    else { await new Promise(res => setTimeout(res, 1600)); r = demoReview(d); demo = true; }
+  } catch(e){
+    S.busy = false;
+    if(e && e.code === 'not_granted'){ S.sample = null; d.err = '沒有取得 Claude 審核權限，已切換為示範模式，請再送一次。'; }
+    else if(e && e.code === 'rate_limited'){ d.err = '審核太頻繁了，請稍等一下再送。'; }
+    else d.err = '審核時發生問題：' + (e && e.message || e);
+    go('feed'); return;
+  }
+  if(serverFeed){
+    const i = S.feeds.findIndex(f => f.id === serverFeed.id); if(i>=0) S.feeds[i] = serverFeed; else S.feeds.push(serverFeed);
+    d.lastFeedId = serverFeed.id; S.busy = false; S.lastResult = Object.assign({}, r, {demo:false, appealed:!!appeal, stageBefore});
+    await settleStatuses(); go('result'); return;
+  }
+  const feed = appeal && d.lastFeedId ? S.feeds.find(f => f.id === d.lastFeedId) : null;
+  const rec = Object.assign(feed || {id:uid(), goalId:g.id, slot:st.open, ts:now(), text:d.text, thumbs:d.thumbs, hashes:d.hashes},
+    {verdict:r.verdict, score:r.score, reason:r.reason, missing:r.missing, summary:r.summary, demo, appealed:!!appeal});
+  await saveFeed(rec); d.lastFeedId = rec.id;
+  S.busy = false; S.lastResult = Object.assign({}, r, {demo, appealed:!!appeal, stageBefore});
+  await settleStatuses(); go('result');
+}
+async function doRecap(){
+  const g = S.goals.find(x => x.id === S.cur); const st = stateOf(g); const s = sp(g.species);
+  const lines = st.feeds.map(f => `- ${fmt(f.ts)} [${f.verdict}] ${f.summary || f.text}`).join('\n') || '（沒有紀錄）';
+  const outcome = {graduated:'畢業（成功達成）', barely:'勉強過關', gone:'游走了（中途錯過太多次）'}[g.status];
+  if(AI){
+    S.busy = true; render();
+    try { const out = await invokeFn('recap', {goalId:g.id}); g.recap = out.recap; const i = S.goals.findIndex(x => x.id === g.id); if(i>=0) S.goals[i] = g; }
+    catch(e){ alertInline('寫回顧時發生問題：' + e.message); }
+    S.busy = false; render(); return;
+  }
+  if(!S.sample){
+    const passed = st.feeds.filter(f => f.verdict === 'pass');
+    const first = passed[0], last = passed[passed.length-1];
+    g.recap = `${g.fishName || s.name}陪你走過「${g.title}」，從 ${fmtD(g.start)} 到 ${fmtD(g.end)}，一共吃到 ${st.pass} 次飼料，錯過 ${st.missed} 次，最後${outcome}。` +
+      (first ? `\n第一口飼料是「${first.summary || first.text}」` : '') + (last && last !== first ? `，最後一口是「${last.summary || last.text}」。` : (first ? '。' : '')) +
+      (g.why ? `\n當初的動機：${g.why}` : ''); await saveGoal(g); render(); return; }
+  S.busy = true; render();
+  try {
+    const out = await S.sample(`你是「養魚目標 App」的回顧作者。用溫暖、具體、不浮誇的繁體中文，以第三人稱寫一段 150–220 字的「這條魚的一生」，回顧使用者這段目標旅程：做到了什麼、在哪裡卡住、最後的結果，結尾給一句下次可以怎麼做的建議。只輸出內文，不要標題。
+目標：${g.title}
+動機：${g.why || '未填'}
+魚：${g.fishName || s.name}（${s.name}，${RARITY[s.rarity].label}）
+期間：${fmtD(g.start)} – ${fmtD(g.end)}，${TYPES[g.type].label}目標
+結果：${outcome}；通過 ${st.pass}/${st.total} 次，錯過 ${st.missed} 次
+每次餵食紀錄：
+${lines}`, {modelTier:'default'});
+    g.recap = (out && out.text || '').trim();
+    await saveGoal(g);
+  } catch(e){ alertInline('寫回顧時發生問題，請稍後再試。'); }
+  S.busy = false; render();
+}
+function alertInline(msg){ S.modal = {title:'提示', body:msg, ok:'closemodal', okLabel:'好'}; render(); }
+
+// ---------- 範例資料 ----------
+async function seed(){
+  const t = now(); const today = new Date(t); today.setHours(12,0,0,0);
+  const g1 = {id:uid(), type:'short', title:'每天讀 20 頁書', why:'想把讀書變成習慣', criteria:'每天讀至少 20 頁，附上讀到的頁面或筆記照片',
+    species:'goldfish', fishName:'小橘', freq:'daily', days:[], every:14, time:'21:00', start:today.getTime() - 6*D, end:today.getTime() + 7*D, status:'active', created:t};
+  const g2 = {id:uid(), type:'mid', title:'完成 5 公里慢跑', why:'體力變好，國考期間也能撐住', criteria:'每週兩次跑步，附上跑步 App 截圖（看得到日期與距離）',
+    species:'puffer', fishName:'圓仔', freq:'weekly', days:[2,5], every:14, time:'07:00', start:today.getTime() - 70*D, end:today.getTime() - 12*D, status:'graduated', endedAt:today.getTime() - 12*D, created:t,
+    recap:'圓仔陪你跑了將近兩個月。一開始只能跑 1.5 公里，第三週卡在 3 公里附近，連續兩次只交了文字被要求補截圖。後來你把跑步改到早上，紀錄就穩定了，最後一次跑完 5.2 公里，配速也比第一次快了將近一分鐘。圓仔吃得圓滾滾地畢業。\n下次可以試著一開始就把「截圖」設成跑完的固定動作，就不會被卡補件了。',
+    note:'早上跑比晚上跑容易堅持！'};
+  await saveGoal(g1); await saveGoal(g2);
+  const s1 = slotsOf(g1); const texts = ['讀完《原子習慣》第 1–2 章，共 24 頁','讀到第 3 章，畫了重點','第 4 章，寫了一段心得','今天讀了 22 頁，做了筆記'];
+  for(const [k, i] of [[0,0],[1,1],[2,2],[3,4]].map(([a,b]) => [a,b])){
+    await saveFeed({id:uid(), goalId:g1.id, slot:i, ts:s1[i] + 20*60e3, text:texts[k], thumbs:[], hashes:[], verdict:'pass', score:82+k, reason:'說明具體，有頁數與內容，符合標準。', missing:'', summary:texts[k], demo:true});
+  }
+  await saveFeed({id:uid(), goalId:g1.id, slot:3, ts:s1[3] + 30*60e3, text:'今天有讀', thumbs:[], hashes:[], verdict:'needs_more', score:40, reason:'看不出讀了哪裡、讀了多少。', missing:'頁數或筆記照片', summary:'', demo:true});
+  const s2 = slotsOf(g2);
+  for(let i=0;i<s2.length;i++){
+    if(i === 5 || i === 11) continue;
+    const km = (1.5 + i*0.22).toFixed(1);
+    await saveFeed({id:uid(), goalId:g2.id, slot:i, ts:s2[i] + 50*60e3, text:`跑了 ${km} 公里`, thumbs:[], hashes:[], verdict:'pass', score:85, reason:'截圖有日期與距離，符合標準。', missing:'', summary:`跑了 ${km} 公里`, demo:true});
+  }
+  render();
+}
+
+// ---------- 事件 ----------
+document.addEventListener('click', async e => {
+  const el = e.target.closest('[data-act]');
+  if(!el) return;
+  if(e.target.closest('[data-stop]') && el.dataset.act === 'closemodal' && !el.matches('button')) return;
+  const a = el.dataset.act, v = el.dataset.v;
+  if(a === 'tab'){ S.modal = null; go(v); }
+  else if(a === 'loginmode'){ S.login.mode = S.login.mode === 'in' ? 'up' : 'in'; S.login.err = ''; S.login.msg = ''; render(); }
+  else if(a === 'account'){ S.modal = {title:'帳號', body:'目前登入：' + (S.user && S.user.email || ''), ok:'logout', okLabel:'登出'}; render(); }
+  else if(a === 'logout'){ S.modal = null; await sb.auth.signOut(); }
+  else if(a === 'home'){ go('home'); }
+  else if(a === 'new'){ S.wiz = newWizard(); go('wizard'); }
+  else if(a === 'seed'){ await seed(); }
+  else if(a === 'shift'){ S.timeShift = v === '0' ? 0 : S.timeShift + D; await settleStatuses(); render(); }
+  else if(a === 'open'){ go('tank', {cur:el.dataset.id}); }
+  else if(a === 'mem'){ go('memory', {cur:el.dataset.id}); }
+  else if(a === 'wtype'){ const w = S.wiz, t = TYPES[v]; w.type = v; w.freq = t.freq; w.end = w.start + t.days*D; if(v==='long') w.every = 14; render(); }
+  else if(a === 'rfilter'){ if(S.view==='wizard') readWizInputs(); S.rfilter = v; render(); }
+  else if(a === 'wsp'){ readWizInputs(); S.wiz.species = v; render(); }
+  else if(a === 'wfreq'){ readWizInputs(); S.wiz.freq = v; render(); }
+  else if(a === 'wday'){ readWizInputs(); const d = Number(v), arr = S.wiz.days; S.wiz.days = arr.includes(d) ? arr.filter(x => x !== d) : [...arr, d].sort(); render(); }
+  else if(a === 'wback'){ readWizInputs(); S.wiz.err = ''; S.wiz.step--; render(); }
+  else if(a === 'wnext'){ readWizInputs(); const w = S.wiz;
+    if(w.step === 2 && (!w.title.trim() || !w.criteria.trim())){ w.err = '請填目標名稱和合格餵食標準。'; render(); return; }
+    w.err = ''; w.step++; S._scrollTop = true; render(); }
+  else if(a === 'wdone'){ readWizInputs(); const w = S.wiz; const g = Object.assign(wizToGoal(), {id:uid(), title:w.title.trim(), why:w.why.trim(), criteria:w.criteria.trim(), fishName:w.fishName.trim(), status:'active', created:now()});
+    if(g.freq === 'weekly' && !g.days.length){ w.err = '每週至少選一天。'; render(); return; }
+    if(!slotsOf(g).length){ w.err = '這個設定下沒有任何餵食時段，請調整結束日或頻率。'; render(); return; }
+    await saveGoal(g); go('tank', {cur:g.id}); }
+  else if(a === 'feed'){ const keep = S.feedDraft && S.feedDraft.goalId === S.cur && S.view === 'result' && S.lastResult && S.lastResult.verdict !== 'pass';
+    S.feedDraft = keep ? Object.assign(S.feedDraft, {err:''}) : {goalId:S.cur, text:'', blobs:[], thumbs:[], hashes:[], err:''}; go('feed'); }
+  else if(a === 'back-tank'){ go('tank'); }
+  else if(a === 'submit'){ if(!S.busy) doSubmit(false); }
+  else if(a === 'appeal'){ if(!S.busy) doSubmit(true); }
+  else if(a === 'recap'){ if(!S.busy) doRecap(); }
+  else if(a === 'savenote'){ const g = S.goals.find(x => x.id === S.cur); g.note = document.getElementById('m-note').value; await saveGoal(g); el.textContent = '已儲存 ✓'; }
+  else if(a === 'askdelete'){ S.modal = {title:'放生這條魚？', body:'這個目標與所有餵食紀錄都會被刪除，無法復原。', ok:'dodelete', okLabel:'放生'}; render(); }
+  else if(a === 'dodelete'){ const id = S.cur; S.modal = null;
+    for(const f of S.feeds.filter(f => f.goalId === id)){ try { await S.store.remove('feeds', f.id); } catch(e){} }
+    try { await S.store.remove('goals', id); } catch(e){}
+    S.feeds = S.feeds.filter(f => f.goalId !== id); S.goals = S.goals.filter(g => g.id !== id); go('home'); }
+  else if(a === 'dexinfo'){ S.dexInfo = v; S.dexStage = 0; S.dexAuto = unlocked(sp(v).rarity); render(); if(S.dexAuto) startDexAuto(); }
+  else if(a === 'closedex'){ if(e.target.closest('[data-stop]') && !el.matches('button')) return; S.dexInfo = null; S.dexAuto = false; clearInterval(dexTimer); render(); }
+  else if(a === 'dexstage'){ S.dexAuto = false; clearInterval(dexTimer); setDexStage(Number(v), true); const b = document.querySelector('[data-act=dexreplay]'); if(b) b.textContent = '▶ 播放進化動畫'; }
+  else if(a === 'dexreplay'){ if(S.dexAuto){ S.dexAuto = false; clearInterval(dexTimer); el.textContent = '▶ 播放進化動畫'; } else { setDexStage(0, false); startDexAuto(); el.textContent = '⏸ 暫停進化動畫'; } }
+  else if(a === 'closemodal'){ if(e.target.closest('[data-stop]') && !el.matches('button')) return; S.modal = null; render(); }
+});
+document.addEventListener('change', async e => {
+  if(e.target.matches('[data-act=unlockall]')){ if(S.view==='wizard') readWizInputs(); S.unlockAll = e.target.checked; render(); }
+  if(e.target.id === 'f-file'){
+    const d = S.feedDraft; const el = document.getElementById('f-text'); if(el) d.text = el.value;
+    const files = [...e.target.files].slice(0, 3); d.blobs = []; d.thumbs = []; d.hashes = []; d.err = '';
+    for(const f of files){
+      try {
+        const im = await loadImg(f);
+        const big = toCanvas(im, 1024); d.blobs.push(await new Promise(r => big.toBlob(r, 'image/jpeg', .82)));
+        d.thumbs.push(toCanvas(im, 240).toDataURL('image/jpeg', .6));
+        d.hashes.push(tinyHash(im));
+      } catch(err){ d.err = '有一張圖片讀不出來，請換一張。'; }
+    }
+    render();
+  }
+});
+// ---------- 魚在缸裡自由游動 + 特效 ----------
+const SWIM = new Map();
+const reduceMotion = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+const WATER = {x0:44, x1:176, y0:82, y1:178};
+const NS = 'http://www.w3.org/2000/svg';
+function rnd(a, b){ return a + Math.random()*(b-a); }
+function fx(svg, x, y, kind, o={}){
+  if(reduceMotion || !svg) return;
+  const layer = svg.querySelector('.fx'); if(!layer) return;
+  const t = o.t || ({bubble:2600, heart:1300, sparkle:1000, ripple:700}[kind]);
+  const g = document.createElementNS(NS, 'g'); g.setAttribute('transform', `translate(${x.toFixed(1)},${y.toFixed(1)})`);
+  const style = `--t:${t}ms;--dx:${(o.dx||0).toFixed(1)}px;--dy:${(o.dy ?? -60).toFixed(1)}px;--s0:${o.s0 ?? 1};--s1:${o.s1 ?? 1}`;
+  const shape = {
+    bubble: `<circle r="${o.r || 2.4}" fill="#fff" fill-opacity=".25" stroke="#fff" stroke-opacity=".85" stroke-width="1"/>`,
+    heart: `<path d="M0 4 C-7 -2 -6 -8 0 -4.5 C6 -8 7 -2 0 4Z" fill="#FF7FA6" stroke="#fff" stroke-width=".8"/>`,
+    sparkle: `<path d="M0 -6 L1.6 -1.6 6 0 1.6 1.6 0 6 -1.6 1.6 -6 0 -1.6 -1.6Z" fill="${o.color || '#FFE680'}"/>`,
+    ripple: `<circle r="6" fill="none" stroke="#fff" stroke-width="2" opacity=".8"/>`
+  }[kind];
+  g.innerHTML = `<g class="fx-rise" style="${style}">${shape}</g>`;
+  layer.appendChild(g); setTimeout(() => g.remove(), t + 80);
+}
+function burst(svg, x, y, kind, n, spread=34){
+  for(let i=0;i<n;i++){ const a = i/n*Math.PI*2 + Math.random()*.4, r = spread*rnd(.6,1);
+    fx(svg, x, y, kind, {dx:Math.cos(a)*r, dy:Math.sin(a)*r - 8, s0:.4, s1:1.2, color:['#FFE680','#FFB3C7','#B9F0FF','#C9FFB3'][i%4]}); }
+}
+function boundsFor(el){
+  let hw = 40, ht = 25, hb = 25;
+  try { const b = (el.querySelector('.fishcore') || el.querySelector('.fishbody')).getBBox(); const k = Number(el.dataset.k) || .66;
+    hw = Math.max(104 - b.x, b.x + b.width - 104) * k; ht = (70 - b.y) * k; hb = (b.y + b.height - 70) * k; } catch(e){}
+  const x0 = WATER.x0 + hw*.9, x1 = WATER.x1 - hw*.9, y0 = WATER.y0 + ht, y1 = WATER.y1 - hb;
+  return {hw, x0: Math.min(x0, 110), x1: Math.max(x1, 110), y0: Math.min(y0, 128), y1: Math.max(y1, 128)};
+}
+const clamp = (v, a, b) => Math.min(Math.max(v, a), b);
+function pickTarget(s){
+  if(s.mode === 'food'){ s.tx = Math.min(s.b.x1, 140); s.ty = s.b.y0 + 4; return; }
+  s.tx = rnd(s.b.x0, s.b.x1); s.ty = rnd(s.b.y0, s.b.y1); s.wait = Math.random() < .3 ? rnd(400, 1500) : 0;
+}
+function celebrate(el, s, big){
+  s.spin = 800; const svg = el.ownerSVGElement;
+  for(let i=0;i<(big?5:3);i++) setTimeout(() => fx(svg, s.x + rnd(-10,10), s.y - 12, 'heart', {dx:rnd(-14,14), dy:-rnd(30,50), s0:.5, s1:1.15}), i*140);
+  if(big) setTimeout(() => burst(svg, s.x, s.y, 'sparkle', 12, 46), 250);
+}
+function setBehavior(s){
+  // 隨機切換行為：巡游、衝刺、發呆、到缸底啄食
+  const r = Math.random();
+  if(s.mode === 'food'){ s.beh = 'cruise'; pickTarget(s); return; }
+  if(r < .55){ s.beh = 'cruise'; s.maxV = rnd(.045, .07); s.tx = rnd(s.b.x0, s.b.x1); s.ty = rnd(s.b.y0, s.b.y1); }
+  else if(r < .7){ s.beh = 'dart'; s.maxV = rnd(.13, .17); const dir = s.x < 110 ? 1 : -1; s.tx = clamp(s.x + dir*rnd(50,90), s.b.x0, s.b.x1); s.ty = clamp(s.y + rnd(-25,25), s.b.y0, s.b.y1); }
+  else if(r < .88){ s.beh = 'idle'; s.idleT = rnd(1200, 2800); }
+  else { s.beh = 'peck'; s.maxV = .05; s.tx = rnd(s.b.x0, s.b.x1); s.ty = s.b.y1; s.peckT = 0; }
+}
+function swimTick(t){
+  document.querySelectorAll('.mover').forEach(el => {
+    let s = el._swim;
+    if(!s){
+      const saved = SWIM.get(el.dataset.key);
+      s = el._swim = {b: boundsFor(el), mode: el.dataset.mode, speed: Number(el.dataset.speed) || 1, face: 1, flipNow: 1, last: t,
+        phase: Math.random()*6, boost: 0, spin: 0, bubbleIn: rnd(1200, 4000), sparkIn: rnd(800, 2500), vx: 0, vy: 0, maxV: .06, wagSet: 0, squash: 0};
+      s.x = saved ? clamp(saved.x, s.b.x0, s.b.x1) : rnd(s.b.x0, s.b.x1);
+      s.y = saved ? clamp(saved.y, s.b.y0, s.b.y1) : rnd(s.b.y0, s.b.y1);
+      if(saved){ s.face = saved.face; s.flipNow = saved.face; }
+      if(s.mode === 'food') pickTarget(s); else setBehavior(s);
+    }
+    const dt = Math.min(64, t - s.last); s.last = t;
+    if(reduceMotion){ el.setAttribute('transform', `translate(${s.x.toFixed(1)},${s.y.toFixed(1)})`); return; }
+    const svg = el.ownerSVGElement;
+    // --- 行為與目標
+    if(s.beh === 'idle'){
+      s.idleT -= dt; s.tx = s.x + s.vx*20; s.ty = s.y;
+      if(s.idleT <= 0) setBehavior(s);
+    }
+    const dx = s.tx - s.x, dy = s.ty - s.y, dist = Math.hypot(dx, dy);
+    let maxV = (s.beh === 'idle' ? .012 : s.maxV) * s.speed * (1 + s.boost);
+    if(s.mode === 'food' || s.mode === 'nibble') maxV = .09 * s.speed;
+    // 抵達減速
+    const want = dist > 0.5 ? Math.min(maxV, maxV * dist / 22 + .004) : 0;
+    const dvx = (dist ? dx/dist*want : 0) - s.vx, dvy = (dist ? dy/dist*want : 0) - s.vy;
+    const steer = (s.beh === 'dart' ? .012 : .0045) * dt;
+    s.vx += clamp(dvx, -steer*.06, steer*.06) * (dt/16) ; s.vy += clamp(dvy, -steer*.05, steer*.05) * (dt/16);
+    const nx = s.x + s.vx*dt, ny = s.y + s.vy*dt;
+    s.x = clamp(nx, s.b.x0 - 2, s.b.x1 + 2); s.y = clamp(ny, s.b.y0 - 2, s.b.y1 + 2);
+    if(s.x !== nx) s.vx *= .5; if(s.y !== ny) s.vy *= .5;
+    const v = Math.hypot(s.vx, s.vy);
+    if(dist < 3 && s.beh !== 'idle'){
+      if(s.mode === 'food'){ s.mode = 'nibble'; s.beh = 'idle'; s.idleT = 700; if(el.dataset.celebrate === '1') setTimeout(() => celebrate(el, s, el.dataset.levelup === '1'), 450); }
+      else if(s.beh === 'peck'){ s.beh = 'idle'; s.idleT = 1400; s.pecking = 1400; }
+      else setBehavior(s);
+    }
+    if(s.mode === 'nibble' && s.beh === 'idle' && s.idleT <= 0){ s.mode = 'free'; }
+    // 轉向：水平速度夠大才轉身，轉身瞬間身體壓扁一下
+    s.turnCd = Math.max(0, (s.turnCd || 0) - dt);
+    if(Math.abs(s.vx) > .02 && s.turnCd <= 0){ const nf = s.vx > 0 ? 1 : -1; if(nf !== s.face){ s.face = nf; s.squashT = 300; s.turnCd = 450; } }
+    s.squashT = Math.max(0, (s.squashT || 0) - dt); s.squash = s.squashT > 0 ? Math.sin(Math.PI * (1 - s.squashT/300)) : 0;
+    s.boost = Math.max(0, s.boost - dt/900);
+    // 尾巴擺動速度跟著游速
+    // 尾巴擺動改由程式逐格計算：速度改變時頻率平滑過渡，不會因為重設 CSS 動畫而跳格
+    s.tailPh = (s.tailPh || 0) + dt * (.0065 + v*.11) * Math.max(.5, s.speed);
+    const tailA = Math.sin(s.tailPh) * (9 + clamp(v*60, 0, 6));
+    if(!el._tails) el._tails = el.querySelectorAll('.tail');
+    el._tails.forEach(n => n.style.transform = `rotate(${tailA.toFixed(2)}deg)`);
+    // 吐泡泡
+    s.bubbleIn -= dt * s.speed;
+    if(s.bubbleIn <= 0){ s.bubbleIn = s.beh === 'idle' ? rnd(1200, 3000) : rnd(2600, 6500);
+      const n = Math.random() < .35 ? 3 : 1;
+      for(let i=0;i<n;i++) setTimeout(() => fx(svg, s.x + s.face*s.b.hw*.85, s.y - 4, 'bubble', {r:rnd(1.4,3), dx:rnd(-6,6), dy:-(s.y - 74), t:rnd(2200,3200)}), i*220); }
+    if(el.dataset.rar === 'legendary'){ s.sparkIn -= dt; if(s.sparkIn <= 0){ s.sparkIn = rnd(1200, 2600); fx(svg, s.x + rnd(-s.b.hw, s.b.hw), s.y + rnd(-18, 12), 'sparkle', {dx:0, dy:-14, s0:.3, s1:1, t:900}); } }
+    // 啄食缸底：上下點頭並冒小泡
+    let peckY = 0, peckRot = 0;
+    if(s.pecking > 0){ s.pecking -= dt; const k = Math.sin((1400 - s.pecking)/1400*Math.PI*4); peckY = Math.max(0, k)*3; peckRot = Math.max(0, k)*14;
+      if(Math.random() < dt/600) fx(svg, s.x + s.face*s.b.hw*.8, s.y + 4, 'bubble', {r:1.2, dx:rnd(-3,3), dy:-rnd(12,24), t:900}); }
+    // --- 身體姿態
+    s.flipNow += (s.face - s.flipNow) * Math.min(1, dt/150);
+    s.phase += dt * .006 * s.speed * (1 + v*14);
+    const pitchT = v > .01 ? clamp(Math.atan2(s.vy, Math.max(Math.abs(s.vx), .025)) * 57.3, -24, 24) : 0;
+    s.pitch = (s.pitch || 0) + (pitchT - (s.pitch || 0)) * Math.min(1, dt/320);
+    const fdir = clamp(s.flipNow, -1, 1);
+    let rot = s.pitch * fdir + Math.sin(s.phase) * (s.beh === 'idle' ? 2 : 3.5) + peckRot * fdir, jumpY = 0;
+    if(s.spin > 0){ s.spin -= dt; const p = 1 - Math.max(0, s.spin)/800; jumpY = -Math.sin(Math.PI*p) * 12; }
+    const bob = Math.sin(s.phase * .55) * (s.beh === 'idle' ? 2.4 : 1.2);
+    // 擠壓伸展：游得快拉長、轉身時壓扁、平時輕微呼吸
+    const stretch = 1 + clamp(v*1.6, 0, .14) - s.squash*.22;
+    const breathe = 1 + Math.sin(s.phase*.8) * .025;
+    const sx = Math.sign(s.flipNow || 1) * Math.max(.04, Math.abs(s.flipNow)) * stretch;
+    const sy = (2 - stretch) * breathe;
+    el.setAttribute('transform', `translate(${s.x.toFixed(2)},${(s.y + bob + jumpY + peckY).toFixed(2)}) rotate(${rot.toFixed(2)})`);
+    const fl = el.firstElementChild; if(fl) fl.setAttribute('transform', `scale(${sx.toFixed(3)},${sy.toFixed(3)})`);
+    SWIM.set(el.dataset.key, {x: s.x, y: s.y, face: s.face});
+  });
+  requestAnimationFrame(swimTick);
+}
+// 點魚缸：魚游過去；點到魚：開心轉一圈冒愛心
+function svgPoint(svg, e){ const p = svg.createSVGPoint(); p.x = e.clientX; p.y = e.clientY; const m = svg.getScreenCTM(); return m ? p.matrixTransform(m.inverse()) : null; }
+function bowlTap(svg, e){
+  const el = svg.querySelector('.mover'); const pt = svgPoint(svg, e); if(!pt) return;
+  if(!el || !el._swim){ fx(svg, pt.x, pt.y, 'ripple', {dy:0, s0:.4, s1:2.4}); return; }
+  const s = el._swim;
+  if(Math.hypot(pt.x - s.x, pt.y - s.y) < Math.max(22, s.b.hw*.8)){ celebrate(el, s, false); return; }
+  fx(svg, pt.x, pt.y, 'ripple', {dy:0, s0:.4, s1:2.4});
+  s.tx = clamp(pt.x, s.b.x0, s.b.x1); s.ty = clamp(pt.y, s.b.y0, s.b.y1); s.beh = 'dart'; s.maxV = .14; s.boost = .6; s.pecking = 0; if(s.mode !== 'food') s.mode = 'free';
+}
+document.addEventListener('pointerdown', e => { const svg = e.target.closest && e.target.closest('svg[data-play]'); if(svg) bowlTap(svg, e); });
+requestAnimationFrame(swimTick);
+
+if('serviceWorker' in navigator && location.protocol !== 'file:') navigator.serviceWorker.register('sw.js').catch(()=>{});
+render();
+initCaps().then(settleStatuses).then(render);
+</script>
+</body>
+</html>
